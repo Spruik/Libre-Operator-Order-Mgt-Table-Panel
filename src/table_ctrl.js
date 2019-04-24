@@ -115,8 +115,7 @@ export class TableCtrl extends MetricsPanelCtrl {
     this.render();
   }
 
-  onDataReceived(dataList) {
-
+  onDataReceived(dataList) {    
     dataList = this.reorderData(dataList)
     dataList = this.filter(dataList)
 
@@ -141,7 +140,7 @@ export class TableCtrl extends MetricsPanelCtrl {
   }
 
   //Reorder the column to put the productionLine go first.
-  reorderData(dataList){
+  reorderData(dataList){    
     if (dataList.length === 0) {
       return dataList
     }

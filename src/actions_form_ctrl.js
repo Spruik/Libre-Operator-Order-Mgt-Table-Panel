@@ -213,12 +213,11 @@ function updateNextToRunningAndRunningExist(cur, run, rate){
 function writeInfluxLine(data, status, rate){
   //For influxdb tag keys, must add a forward slash \ before each space 
   let product_desc = data.product_desc.split(' ').join('\\ ')
-  let production_line = data.production_line.split(' ').join('\\ ')
 
-  let line = 'OrderPerformance,order_id=' + data.order_id + ',product_id=' + data.product_id + ',product_desc=' + product_desc + ',production_line=' + production_line + ' '
+  let line = 'OrderPerformance,order_id=' + data.order_id + ',product_id=' + data.product_id + ',product_desc=' + product_desc + ' '
 
-  if (data.completion_qty !== null && data.completion_qty !== undefined) {
-    line += 'completion_qty=' + data.completion_qty + ','
+  if (data.compl_qty !== null && data.compl_qty !== undefined) {
+    line += 'compl_qty=' + data.compl_qty + ','
   }
   if (data.machine_state !== null && data.machine_state !== undefined) {
     line += 'machine_state="' + data.machine_state + '"' + ','
@@ -229,11 +228,15 @@ function writeInfluxLine(data, status, rate){
 
   line += 'order_state="' + status + '"' + ','
   line += 'order_date="' + data.order_date + '"' + ','
+  line += 'production_line="' + data.production_line + '"' + ','
   line += 'order_qty=' + data.order_qty + ','
+  line += 'scheduled_end_datetime=' + data.scheduled_end_datetime + ','
+  line += 'scheduled_start_datetime=' + data.scheduled_start_datetime + ','
+  line += 'planned_changeover_time="' + data.planned_changeover_time + '"' + ','
   line += 'setpoint_rate=' + rate + ','
   line += 'planned_rate=' + data.planned_rate
 
-//   console.log(line);
+  // console.log(line);
   return line
 }
 
