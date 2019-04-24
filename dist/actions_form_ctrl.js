@@ -237,7 +237,7 @@ System.register(['app/core/core', './utils'], function (_export, _context) {
     line += 'setpoint_rate=' + rate + ',';
     line += 'planned_rate=' + data.planned_rate;
 
-    console.log(line);
+    // console.log(line);
     return line;
   }
 

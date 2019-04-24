@@ -208,9 +208,6 @@ System.register(['lodash', 'jquery', 'app/plugins/sdk', './transformers', './edi
         }, {
           key: 'onDataReceived',
           value: function onDataReceived(dataList) {
-
-            console.log(dataList);
-
             dataList = this.reorderData(dataList);
             dataList = this.filter(dataList);
 
@@ -236,8 +233,6 @@ System.register(['lodash', 'jquery', 'app/plugins/sdk', './transformers', './edi
         }, {
           key: 'reorderData',
           value: function reorderData(dataList) {
-            console.log(dataList);
-
             if (dataList.length === 0) {
               return dataList;
             }
