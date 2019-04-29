@@ -3,7 +3,7 @@
 System.register(['lodash', 'jquery', 'app/plugins/sdk', './transformers', './editor', './column_options', './renderer', './actions_form_ctrl', './css/style.css!', './css/instant-serach.css!'], function (_export, _context) {
   "use strict";
 
-  var _, $, MetricsPanelCtrl, transformDataToTable, tablePanelEditor, columnOptionsTab, TableRenderer, showActionForm, _createClass, _get, panelDefaults, TableCtrl;
+  var _, $, MetricsPanelCtrl, transformDataToTable, tablePanelEditor, columnOptionsTab, TableRenderer, showActionForm, _createClass, _get, panelDefaults, _ctrl, TableCtrl;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -34,6 +34,18 @@ System.register(['lodash', 'jquery', 'app/plugins/sdk', './transformers', './edi
     });
     if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
   }
+
+  function refresh() {
+    _ctrl.refresh();
+  }
+
+  _export('refresh', refresh);
+
+  function refreshDashboard() {
+    _ctrl.timeSrv.refreshDashboard();
+  }
+
+  _export('refreshDashboard', refreshDashboard);
 
   return {
     setters: [function (_lodash) {
@@ -124,6 +136,7 @@ System.register(['lodash', 'jquery', 'app/plugins/sdk', './transformers', './edi
         fontSize: '100%',
         sort: { col: 0, desc: true }
       };
+      _ctrl = void 0;
 
       _export('TableCtrl', TableCtrl = function (_MetricsPanelCtrl) {
         _inherits(TableCtrl, _MetricsPanelCtrl);
@@ -329,6 +342,7 @@ System.register(['lodash', 'jquery', 'app/plugins/sdk', './transformers', './edi
             var data = void 0;
             var panel = ctrl.panel;
             var pageCount = 0;
+            _ctrl = ctrl;
 
             function getTableHeight() {
               var panelHeight = ctrl.height;

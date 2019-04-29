@@ -41,6 +41,9 @@ const panelDefaults = {
   sort: { col: 0, desc: true },
 };
 
+//global ctrl for the exposure of refresh function for other parts of the program
+let _ctrl
+
 export class TableCtrl extends MetricsPanelCtrl {
 
   constructor($scope, $injector, templateSrv, annotationsSrv, $sanitize, variableSrv) {
@@ -236,6 +239,7 @@ export class TableCtrl extends MetricsPanelCtrl {
     let data;
     const panel = ctrl.panel;
     let pageCount = 0;
+    _ctrl = ctrl
 
     function getTableHeight() {
       let panelHeight = ctrl.height;
@@ -334,6 +338,14 @@ export class TableCtrl extends MetricsPanelCtrl {
     });
   }
 
+}
+
+export function refresh(){
+  _ctrl.refresh()
+}
+
+export function refreshDashboard(){
+  _ctrl.timeSrv.refreshDashboard()
 }
 
 TableCtrl.templateUrl = './partials/module.html';

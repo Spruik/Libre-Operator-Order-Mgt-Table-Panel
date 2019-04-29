@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/core/core', './utils'], function (_export, _context) {
+System.register(['app/core/core', './utils', './table_ctrl'], function (_export, _context) {
   "use strict";
 
-  var appEvents, get, influxHost, post, alert, rowData, runningRecord, closeForm;
+  var appEvents, get, influxHost, post, alert, tableCtrl, rowData, runningRecord, closeForm;
 
 
   function showActionForm(productionLine, orderId, description, productId) {
@@ -185,6 +185,7 @@ System.register(['app/core/core', './utils'], function (_export, _context) {
     post(url, line).then(function (res) {
       alert('success', 'Success', 'Order ' + rowData.order_id + ' has been marked as ' + status);
       closeForm();
+      tableCtrl.refresh();
     }).catch(function (e) {
       alert('error', 'Error', 'An error occurred while updating the database, please check your database connection');
       closeForm();
@@ -199,6 +200,7 @@ System.register(['app/core/core', './utils'], function (_export, _context) {
     post(url, runningLine).then(post(url, currentLine).then(function (res) {
       alert('success', 'Success', 'Order ' + cur.order_id + ' has been marked as Running');
       closeForm();
+      tableCtrl.refresh();
     })).catch(function (e) {
       alert('error', 'Error', 'An error occurred while updating the database, please check your database connection');
       closeForm();
@@ -249,6 +251,8 @@ System.register(['app/core/core', './utils'], function (_export, _context) {
       influxHost = _utils.influxHost;
       post = _utils.post;
       alert = _utils.alert;
+    }, function (_table_ctrl) {
+      tableCtrl = _table_ctrl;
     }],
     execute: function () {
       rowData = void 0;

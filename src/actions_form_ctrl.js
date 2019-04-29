@@ -1,6 +1,7 @@
 
 import { appEvents } from 'app/core/core'
 import { get, influxHost, post, alert } from './utils'
+import * as tableCtrl from './table_ctrl'
 
 let rowData
 let runningRecord = {}
@@ -181,6 +182,7 @@ function updateRecord(data, status, rate){
   post(url, line).then(res => {
     alert('success', 'Success', 'Order ' + rowData.order_id + ' has been marked as ' + status)
     closeForm()
+    tableCtrl.refresh()
   }).catch(e => {
     alert('error', 'Error', 'An error occurred while updating the database, please check your database connection')
     closeForm()
@@ -197,6 +199,7 @@ function updateNextToRunningAndRunningExist(cur, run, rate){
         .then(res => {
           alert('success', 'Success', 'Order ' + cur.order_id + ' has been marked as Running')
           closeForm()
+          tableCtrl.refresh()
         })
   ).catch(e => {
     alert('error', 'Error', 'An error occurred while updating the database, please check your database connection')
