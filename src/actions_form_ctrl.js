@@ -2,6 +2,7 @@
 import { appEvents } from 'app/core/core'
 import { get, influxHost, post, alert } from './utils'
 import * as tableCtrl from './table_ctrl'
+import moment from 'moment'
 
 let rowData
 let runningRecord = {}
@@ -227,6 +228,20 @@ function writeInfluxLine(data, status, rate){
   }
   if (data.scrap_qty !== null && data.scrap_qty !== undefined) {
     line += 'scrap_qty=' + data.scrap_qty + ','
+  }
+  if (data.actual_start_datetime !== null && data.actual_start_datetime !== undefined) {
+    line += 'actual_start_datetime=' + data.actual_start_datetime + ','
+  }
+  if (data.actual_end_datetime !== null && data.actual_end_datetime !== undefined) {
+    line += 'actual_end_datetime=' + data.actual_end_datetime + ','
+  }
+
+  if (status === 'Running') {
+    //set actual start time = now
+    line += 'actual_start_datetime=' + moment.now() + ','
+  }else if(status === 'Complete'){
+    //set actual end time = now
+    line += 'actual_end_datetime=' + moment.now() + ','
   }
 
   line += 'order_state="' + status + '"' + ','

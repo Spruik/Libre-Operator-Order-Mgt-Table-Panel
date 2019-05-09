@@ -13,7 +13,11 @@ System.register(['app/core/core'], function (_export, _context) {
 
       _export('postgRestHost', postgRestHost = 'http://' + hostname + ':5436/');
 
+      _export('postgRestHost', postgRestHost);
+
       _export('influxHost', influxHost = 'http://' + hostname + ':8086/');
+
+      _export('influxHost', influxHost);
 
       _export('post', post = function post(url, line) {
         return new Promise(function (resolve, reject) {
@@ -43,6 +47,8 @@ System.register(['app/core/core'], function (_export, _context) {
         });
       });
 
+      _export('post', post);
+
       _export('get', get = function get(url) {
         return new Promise(function (resolve, reject) {
           var xhr = new XMLHttpRequest();
@@ -66,17 +72,11 @@ System.register(['app/core/core'], function (_export, _context) {
         });
       });
 
+      _export('get', get);
+
       _export('alert', alert = function alert(type, title, msg) {
         appEvents.emit('alert-' + type, [title, msg]);
       });
-
-      _export('post', post);
-
-      _export('get', get);
-
-      _export('postgRestHost', postgRestHost);
-
-      _export('influxHost', influxHost);
 
       _export('alert', alert);
     }

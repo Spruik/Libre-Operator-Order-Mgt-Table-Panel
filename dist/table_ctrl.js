@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['lodash', 'jquery', 'app/plugins/sdk', './transformers', './editor', './column_options', './renderer', './actions_form_ctrl', './css/style.css!', './css/instant-serach.css!'], function (_export, _context) {
+System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformers', './editor', './column_options', './renderer', './actions_form_ctrl', './css/style.css!', './css/instant-serach.css!'], function (_export, _context) {
   "use strict";
 
-  var _, $, MetricsPanelCtrl, transformDataToTable, tablePanelEditor, columnOptionsTab, TableRenderer, showActionForm, _createClass, _get, panelDefaults, _ctrl, TableCtrl;
+  var _, $, moment, MetricsPanelCtrl, transformDataToTable, tablePanelEditor, columnOptionsTab, TableRenderer, showActionForm, _createClass, _get, panelDefaults, _ctrl, TableCtrl;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -52,6 +52,8 @@ System.register(['lodash', 'jquery', 'app/plugins/sdk', './transformers', './edi
       _ = _lodash.default;
     }, function (_jquery) {
       $ = _jquery.default;
+    }, function (_moment) {
+      moment = _moment.default;
     }, function (_appPluginsSdk) {
       MetricsPanelCtrl = _appPluginsSdk.MetricsPanelCtrl;
     }, function (_transformers) {

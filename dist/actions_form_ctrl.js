@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/core/core', './utils', './table_ctrl'], function (_export, _context) {
+System.register(['app/core/core', './utils', './table_ctrl', 'moment'], function (_export, _context) {
   "use strict";
 
-  var appEvents, get, influxHost, post, alert, tableCtrl, rowData, runningRecord, closeForm;
+  var appEvents, get, influxHost, post, alert, tableCtrl, moment, rowData, runningRecord, closeForm;
 
 
   function showActionForm(productionLine, orderId, description, productId) {
@@ -228,6 +228,20 @@ System.register(['app/core/core', './utils', './table_ctrl'], function (_export,
     if (data.scrap_qty !== null && data.scrap_qty !== undefined) {
       line += 'scrap_qty=' + data.scrap_qty + ',';
     }
+    if (data.actual_start_datetime !== null && data.actual_start_datetime !== undefined) {
+      line += 'actual_start_datetime=' + data.actual_start_datetime + ',';
+    }
+    if (data.actual_end_datetime !== null && data.actual_end_datetime !== undefined) {
+      line += 'actual_end_datetime=' + data.actual_end_datetime + ',';
+    }
+
+    if (status === 'Running') {
+      //set actual start time = now
+      line += 'actual_start_datetime=' + moment.now() + ',';
+    } else if (status === 'Complete') {
+      //set actual end time = now
+      line += 'actual_end_datetime=' + moment.now() + ',';
+    }
 
     line += 'order_state="' + status + '"' + ',';
     line += 'order_date="' + data.order_date + '"' + ',';
@@ -253,6 +267,8 @@ System.register(['app/core/core', './utils', './table_ctrl'], function (_export,
       alert = _utils.alert;
     }, function (_table_ctrl) {
       tableCtrl = _table_ctrl;
+    }, function (_moment) {
+      moment = _moment.default;
     }],
     execute: function () {
       rowData = void 0;
