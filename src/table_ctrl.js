@@ -120,8 +120,14 @@ export class TableCtrl extends MetricsPanelCtrl {
   }
 
   onDataReceived(dataList) {    
+
+    // time range
+    const from = this.templateSrv.timeRange.from
+    const to = this.templateSrv.timeRange.to
+
     dataList = this.reorderData(dataList)
-    dataList = this.filter(dataList)
+    dataList = this.filter(dataList,from,to)
+    dataList = this.sort(dataList, "scheduled_start_datetime") // sort rows so that all rows are sort/order by scheduled_start_time
 
     this.dataRaw = dataList;
     this.pageIndex = 0;
@@ -171,8 +177,9 @@ export class TableCtrl extends MetricsPanelCtrl {
     return dataList
   }
 
-  //filter out records that are not of status of 'Replaced'
-  filter(dataList){
+  // 1. filter out records that are not of status of 'Replaced'
+  // 2. filter out records that are not in the time range
+  filter(dataList, from, to){
     if (dataList.length === 0) {
         return dataList
     }
@@ -181,7 +188,14 @@ export class TableCtrl extends MetricsPanelCtrl {
     rows = rows.filter(row => {
         const lowerCaseRow = row.map(elem => (typeof elem === 'string') ? elem.toLowerCase() : elem)
         if (lowerCaseRow.indexOf('replaced') === -1 && lowerCaseRow.indexOf('deleted') === -1) {
+          const scheduledStartTimeTimeStamp = row[10] // the scheduled start time is the 10th elem
+          const scheduledStartTime = moment(scheduledStartTimeTimeStamp) // moment shcedule start time
+          const changeover = moment.duration(row[9], 'H:mm:ss') // moment changeover
+          scheduledStartTime.subtract(changeover) // start time - changeover to have the initial time
+          if (scheduledStartTime.isSameOrAfter(from) && scheduledStartTime.isSameOrBefore(to)) {
+            // if scheduled start time >= $from && <= $to
             return row
+          }
         }
     })
     dataList[0].rows = rows
@@ -189,11 +203,30 @@ export class TableCtrl extends MetricsPanelCtrl {
     return dataList
   }
 
+  //sort by schedule start time
+  sort(dataList, key){
+    if (dataList.length === 0) { return dataList }
+    const cols = dataList[0].columns
+    const index = this.find(key, cols)
+    dataList[0].rows.sort((a,b) => a[index] - b[index])
+    return dataList
+  }
+
+  //find index related to the key in the columns
+  find(key, cols){
+    let index = 0    
+    for (const [i, col] of cols.entries()){
+      if (col.text === key) {
+        index = i
+        break
+      }
+    }
+    return index
+  }
+
   render() {
     this.table = transformDataToTable(this.dataRaw, this.panel);
-    // console.log(this.panel.sort);
-    this.table.sort(this.panel.sort);
-    // console.log(this.panel.sort);
+    // this.table.sort(this.panel.sort);
     this.renderer = new TableRenderer(
       this.panel,
       this.table,

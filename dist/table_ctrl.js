@@ -3,7 +3,7 @@
 System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformers', './editor', './column_options', './renderer', './actions_form_ctrl', './css/style.css!', './css/instant-serach.css!'], function (_export, _context) {
   "use strict";
 
-  var _, $, moment, MetricsPanelCtrl, transformDataToTable, tablePanelEditor, columnOptionsTab, TableRenderer, showActionForm, _createClass, _get, panelDefaults, _ctrl, TableCtrl;
+  var _, $, moment, MetricsPanelCtrl, transformDataToTable, tablePanelEditor, columnOptionsTab, TableRenderer, showActionForm, _slicedToArray, _createClass, _get, panelDefaults, _ctrl, TableCtrl;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -68,6 +68,44 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
       showActionForm = _actions_form_ctrl.showActionForm;
     }, function (_cssStyleCss) {}, function (_cssInstantSerachCss) {}],
     execute: function () {
+      _slicedToArray = function () {
+        function sliceIterator(arr, i) {
+          var _arr = [];
+          var _n = true;
+          var _d = false;
+          var _e = undefined;
+
+          try {
+            for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) {
+              _arr.push(_s.value);
+
+              if (i && _arr.length === i) break;
+            }
+          } catch (err) {
+            _d = true;
+            _e = err;
+          } finally {
+            try {
+              if (!_n && _i["return"]) _i["return"]();
+            } finally {
+              if (_d) throw _e;
+            }
+          }
+
+          return _arr;
+        }
+
+        return function (arr, i) {
+          if (Array.isArray(arr)) {
+            return arr;
+          } else if (Symbol.iterator in Object(arr)) {
+            return sliceIterator(arr, i);
+          } else {
+            throw new TypeError("Invalid attempt to destructure non-iterable instance");
+          }
+        };
+      }();
+
       _createClass = function () {
         function defineProperties(target, props) {
           for (var i = 0; i < props.length; i++) {
@@ -223,8 +261,14 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
         }, {
           key: 'onDataReceived',
           value: function onDataReceived(dataList) {
+
+            // time range
+            var from = this.templateSrv.timeRange.from;
+            var to = this.templateSrv.timeRange.to;
+
             dataList = this.reorderData(dataList);
-            dataList = this.filter(dataList);
+            dataList = this.filter(dataList, from, to);
+            dataList = this.sort(dataList, "scheduled_start_datetime"); // sort rows so that all rows are sort/order by scheduled_start_time
 
             this.dataRaw = dataList;
             this.pageIndex = 0;
@@ -277,7 +321,7 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
           }
         }, {
           key: 'filter',
-          value: function filter(dataList) {
+          value: function filter(dataList, from, to) {
             if (dataList.length === 0) {
               return dataList;
             }
@@ -288,7 +332,14 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
                 return typeof elem === 'string' ? elem.toLowerCase() : elem;
               });
               if (lowerCaseRow.indexOf('replaced') === -1 && lowerCaseRow.indexOf('deleted') === -1) {
-                return row;
+                var scheduledStartTimeTimeStamp = row[10]; // the scheduled start time is the 10th elem
+                var scheduledStartTime = moment(scheduledStartTimeTimeStamp); // moment shcedule start time
+                var changeover = moment.duration(row[9], 'H:mm:ss'); // moment changeover
+                scheduledStartTime.subtract(changeover); // start time - changeover to have the initial time
+                if (scheduledStartTime.isSameOrAfter(from) && scheduledStartTime.isSameOrBefore(to)) {
+                  // if scheduled start time >= $from && <= $to
+                  return row;
+                }
               }
             });
             dataList[0].rows = rows;
@@ -296,12 +347,59 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
             return dataList;
           }
         }, {
+          key: 'sort',
+          value: function sort(dataList, key) {
+            if (dataList.length === 0) {
+              return dataList;
+            }
+            var cols = dataList[0].columns;
+            var index = this.find(key, cols);
+            dataList[0].rows.sort(function (a, b) {
+              return a[index] - b[index];
+            });
+            return dataList;
+          }
+        }, {
+          key: 'find',
+          value: function find(key, cols) {
+            var index = 0;
+            var _iteratorNormalCompletion = true;
+            var _didIteratorError = false;
+            var _iteratorError = undefined;
+
+            try {
+              for (var _iterator = cols.entries()[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+                var _step$value = _slicedToArray(_step.value, 2),
+                    i = _step$value[0],
+                    col = _step$value[1];
+
+                if (col.text === key) {
+                  index = i;
+                  break;
+                }
+              }
+            } catch (err) {
+              _didIteratorError = true;
+              _iteratorError = err;
+            } finally {
+              try {
+                if (!_iteratorNormalCompletion && _iterator.return) {
+                  _iterator.return();
+                }
+              } finally {
+                if (_didIteratorError) {
+                  throw _iteratorError;
+                }
+              }
+            }
+
+            return index;
+          }
+        }, {
           key: 'render',
           value: function render() {
             this.table = transformDataToTable(this.dataRaw, this.panel);
-            // console.log(this.panel.sort);
-            this.table.sort(this.panel.sort);
-            // console.log(this.panel.sort);
+            // this.table.sort(this.panel.sort);
             this.renderer = new TableRenderer(this.panel, this.table, this.dashboard.isTimezoneUtc(), this.$sanitize, this.templateSrv, this.col);
 
             return _get(TableCtrl.prototype.__proto__ || Object.getPrototypeOf(TableCtrl.prototype), 'render', this).call(this, this.table);
