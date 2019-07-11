@@ -2,6 +2,8 @@
 import { appEvents } from 'app/core/core'
 import { get, influxHost, post, alert } from './utils'
 import * as tableCtrl from './table_ctrl'
+import * as postgres from './postgres'
+import * as camunda from './camunda'
 import moment from 'moment'
 
 let rowData
@@ -143,8 +145,14 @@ function addListeners() {
       if(rowData.order_state.toLowerCase() === 'next') {
         if (runningRecord) {          
           updateNextToRunningAndRunningExist(rowData, runningRecord, rowData.planned_rate)
+          postgres.getProductById(rowData.product_id, res => {
+            camunda.startQACheck(res[0], rowData.production_line)
+          })
         }else {
           updateRecord(rowData, 'Running', rowData.planned_rate)
+          postgres.getProductById(rowData.product_id, res => {
+            camunda.startQACheck(res[0], rowData.production_line)
+          })
         }
       }else {
         alert('warning', 'Warning', 'Only orders in Next state can be started')

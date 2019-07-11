@@ -1,8 +1,16 @@
 import { appEvents } from 'app/core/core'
 
 const hostname = window.location.hostname
-export const postgRestHost = 'http://' + hostname + ':5436/'
-export const influxHost = 'http://' + hostname + ':8086/'
+const http = "http://"
+export const postgRestHost = http + hostname + ':5436/'
+export const influxHost = http + hostname + ':8086/'
+
+let tasklistHostName = hostname
+if (tasklistHostName === 'localhost') {
+  tasklistHostName = '127.0.0.1'
+}
+export const camundaHost = http + tasklistHostName + ':8080/camunda/app/tasklist'
+export const camundaRestApi = http + hostname + ':8080/engine-rest/'
 
 export const post = (url, line) => {
     return new Promise((resolve, reject) => {

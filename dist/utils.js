@@ -3,21 +3,36 @@
 System.register(['app/core/core'], function (_export, _context) {
   "use strict";
 
-  var appEvents, hostname, postgRestHost, influxHost, post, get, alert;
+  var appEvents, hostname, http, postgRestHost, influxHost, tasklistHostName, camundaHost, camundaRestApi, post, get, alert;
   return {
     setters: [function (_appCoreCore) {
       appEvents = _appCoreCore.appEvents;
     }],
     execute: function () {
       hostname = window.location.hostname;
+      http = "http://";
 
-      _export('postgRestHost', postgRestHost = 'http://' + hostname + ':5436/');
+      _export('postgRestHost', postgRestHost = http + hostname + ':5436/');
 
       _export('postgRestHost', postgRestHost);
 
-      _export('influxHost', influxHost = 'http://' + hostname + ':8086/');
+      _export('influxHost', influxHost = http + hostname + ':8086/');
 
       _export('influxHost', influxHost);
+
+      tasklistHostName = hostname;
+
+      if (tasklistHostName === 'localhost') {
+        tasklistHostName = '127.0.0.1';
+      }
+
+      _export('camundaHost', camundaHost = http + tasklistHostName + ':8080/camunda/app/tasklist');
+
+      _export('camundaHost', camundaHost);
+
+      _export('camundaRestApi', camundaRestApi = http + hostname + ':8080/engine-rest/');
+
+      _export('camundaRestApi', camundaRestApi);
 
       _export('post', post = function post(url, line) {
         return new Promise(function (resolve, reject) {

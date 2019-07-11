@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/core/core', './utils', './table_ctrl', 'moment'], function (_export, _context) {
+System.register(['app/core/core', './utils', './table_ctrl', './postgres', './camunda', 'moment'], function (_export, _context) {
   "use strict";
 
-  var appEvents, get, influxHost, post, alert, tableCtrl, moment, rowData, runningRecord, closeForm;
+  var appEvents, get, influxHost, post, alert, tableCtrl, postgres, camunda, moment, rowData, runningRecord, closeForm;
 
 
   function showActionForm(productionLine, orderId, description, productId) {
@@ -147,8 +147,14 @@ System.register(['app/core/core', './utils', './table_ctrl', 'moment'], function
         if (rowData.order_state.toLowerCase() === 'next') {
           if (runningRecord) {
             updateNextToRunningAndRunningExist(rowData, runningRecord, rowData.planned_rate);
+            postgres.getProductById(rowData.product_id, function (res) {
+              camunda.startQACheck(res[0], rowData.production_line);
+            });
           } else {
             updateRecord(rowData, 'Running', rowData.planned_rate);
+            postgres.getProductById(rowData.product_id, function (res) {
+              camunda.startQACheck(res[0], rowData.production_line);
+            });
           }
         } else {
           alert('warning', 'Warning', 'Only orders in Next state can be started');
@@ -267,6 +273,10 @@ System.register(['app/core/core', './utils', './table_ctrl', 'moment'], function
       alert = _utils.alert;
     }, function (_table_ctrl) {
       tableCtrl = _table_ctrl;
+    }, function (_postgres) {
+      postgres = _postgres;
+    }, function (_camunda) {
+      camunda = _camunda;
     }, function (_moment) {
       moment = _moment.default;
     }],
