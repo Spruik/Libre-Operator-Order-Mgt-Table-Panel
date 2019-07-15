@@ -24,13 +24,16 @@ function showActionForm(productionLine, orderId, description, productId) {
   getRowData(callback, tags)
 
   function callback() {
-    if (rowData.order_state.toLowerCase() === 'planned') {
-      alert('warning', 'Warning', 'This order has NOT been released')
-      return
-    }
-    if (rowData.order_state.toLowerCase() === 'closed') {
-      alert('warning', 'Warning', 'This order has been closed')
-      return
+    console.log(rowData)
+    if (rowData.order_state) {
+      if (rowData.order_state.toLowerCase() === 'planned') {
+        alert('warning', 'Warning', 'This order has NOT been released')
+        return
+      }
+      if (rowData.order_state.toLowerCase() === 'closed') {
+        alert('warning', 'Warning', 'This order has been closed')
+        return
+      }
     }
 
     appEvents.emit('show-modal', {
