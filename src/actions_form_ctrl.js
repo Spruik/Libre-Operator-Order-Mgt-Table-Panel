@@ -73,7 +73,7 @@ function getRowData(callback, tags){
  */
 function getInfluxLine(tags){
   let url = influxHost + 'query?pretty=true&db=smart_factory&q=select last(*) from OrderPerformance' + ' where '
-  url += 'production_line=' + '\'' + tags.productionLine + '\'' + ' group by ' + '"product_desc", "product_id", "order_id" fill(previous)'
+  url += 'production_line=' + '\'' + tags.productionLine + '\'' + ' group by ' + '"product_desc", "product_id", "order_id"'
 
   // console.log(url)
   
@@ -267,7 +267,7 @@ function writeInfluxLine(data, status, rate){
     line += 'actual_end_datetime=' + moment.now() + ','
   }
 
-  //line += 'order_state="' + status + '"' + ','
+  line += 'order_state="' + status + '"' + ','
   line += 'order_date="' + data.order_date + '"' + ','
   line += 'production_line="' + data.production_line + '"' + ','
   line += 'order_qty=' + data.order_qty + ','
