@@ -277,7 +277,7 @@ function writeInfluxLine(data, status, rate){
   line += 'setpoint_rate=' + rate + ','
   line += 'planned_rate=' + data.planned_rate
 
-  // console.log(line);
+  console.log(line);
   return line
 }
 

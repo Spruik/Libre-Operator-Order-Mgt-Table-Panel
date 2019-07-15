@@ -276,7 +276,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     line += 'setpoint_rate=' + rate + ',';
     line += 'planned_rate=' + data.planned_rate;
 
-    // console.log(line);
+    console.log(line);
     return line;
   }
 
