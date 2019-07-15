@@ -24,7 +24,6 @@ function showActionForm(productionLine, orderId, description, productId) {
   getRowData(callback, tags)
 
   function callback() {
-    console.log(rowData)
     if (rowData.order_state) {
       if (rowData.order_state.toLowerCase() === 'planned') {
         alert('warning', 'Warning', 'This order has NOT been released')
@@ -61,7 +60,6 @@ function getRowData(callback, tags){
     const result = formatData(res, tags)
     rowData = result[0]
     runningRecord = result[1]
-    // console.log(rowData)
     callback()
   }).catch(e => {
     alert('error', 'Database Error', 'Database connection failed with influxdb')
@@ -74,8 +72,8 @@ function getRowData(callback, tags){
  * @param {*} tags 
  */
 function getInfluxLine(tags){
-  let url = influxHost + 'query?pretty=true&db=smart_factory&q=select * from OrderPerformance' + ' where '
-  url += 'production_line=' + '\'' + tags.productionLine + '\''
+  let url = influxHost + 'query?pretty=true&db=smart_factory&q=select last(*) from OrderPerformance' + ' where '
+  url += 'production_line=' + '\'' + tags.productionLine + '\'' + ' group by ' + '"product_desc", "product_id", "order_id" fill(previous)'
 
   // console.log(url)
   
@@ -91,8 +89,17 @@ function getInfluxLine(tags){
 function formatData(res, tags){
   let records = []
 
-  let cols = res.results[0].series[0].columns
-  let rows = res.results[0].series[0].values
+  const series = res.results[0].series
+
+  let cols = series[0].columns
+  cols = cols.map(x => x.substring(5, x.length))
+  cols[0] = "time"
+  let rows = []
+  let resultTags = []
+  for (let i = 0; i < series.length; i++) {
+    rows.push(series[i].values[0])
+    resultTags.push(series[i].tags)
+  }
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -101,6 +108,7 @@ function formatData(res, tags){
       const col = cols[k];
       obj[col] = row[k]
     }
+    obj = Object.assign(obj, resultTags[i])
     records.push(obj)
   }
   
@@ -108,11 +116,7 @@ function formatData(res, tags){
   const current = currents[currents.length - 1]
 
   //find the latest running record
-  const runnings = records.filter(record => {
-    if (record.record_state){
-      return record.order_state.toLowerCase() === 'running'
-    }
-  })
+  const runnings = records.filter(record => record.order_state.toLowerCase() === 'running')
   const filteredRunnings = runnings.filter(running => running.order_id !== tags.orderId || running.product_id !== tags.productId)
   let running = filteredRunnings[filteredRunnings.length - 1]
   
@@ -128,8 +132,8 @@ function formatData(res, tags){
   if (!isRunningTheLatest) { running = null }
 
   // console.log(records)
-  // console.log(current);
-  // console.log(running)
+  // console.log('cur',current);
+  // console.log('runn',running)
   return [current, running]
 }
 
@@ -259,7 +263,7 @@ function writeInfluxLine(data, status, rate){
     line += 'actual_end_datetime=' + moment.now() + ','
   }
 
-  line += 'order_state="' + status + '"' + ','
+  //line += 'order_state="' + status + '"' + ','
   line += 'order_date="' + data.order_date + '"' + ','
   line += 'production_line="' + data.production_line + '"' + ','
   line += 'order_qty=' + data.order_qty + ','

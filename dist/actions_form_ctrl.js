@@ -17,7 +17,6 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     getRowData(callback, tags);
 
     function callback() {
-      console.log(rowData);
       if (rowData.order_state) {
         if (rowData.order_state.toLowerCase() === 'planned') {
           alert('warning', 'Warning', 'This order has NOT been released');
@@ -53,7 +52,6 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
       var result = formatData(res, tags);
       rowData = result[0];
       runningRecord = result[1];
-      // console.log(rowData)
       callback();
     }).catch(function (e) {
       alert('error', 'Database Error', 'Database connection failed with influxdb');
@@ -66,8 +64,8 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
    * @param {*} tags 
    */
   function getInfluxLine(tags) {
-    var url = influxHost + 'query?pretty=true&db=smart_factory&q=select * from OrderPerformance' + ' where ';
-    url += 'production_line=' + '\'' + tags.productionLine + '\'';
+    var url = influxHost + 'query?pretty=true&db=smart_factory&q=select last(*) from OrderPerformance' + ' where ';
+    url += 'production_line=' + '\'' + tags.productionLine + '\'' + ' group by ' + '"product_desc", "product_id", "order_id" fill(previous)';
 
     // console.log(url)
 
@@ -83,16 +81,28 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
   function formatData(res, tags) {
     var records = [];
 
-    var cols = res.results[0].series[0].columns;
-    var rows = res.results[0].series[0].values;
+    var series = res.results[0].series;
 
-    for (var i = 0; i < rows.length; i++) {
-      var row = rows[i];
+    var cols = series[0].columns;
+    cols = cols.map(function (x) {
+      return x.substring(5, x.length);
+    });
+    cols[0] = "time";
+    var rows = [];
+    var resultTags = [];
+    for (var i = 0; i < series.length; i++) {
+      rows.push(series[i].values[0]);
+      resultTags.push(series[i].tags);
+    }
+
+    for (var _i = 0; _i < rows.length; _i++) {
+      var row = rows[_i];
       var obj = {};
       for (var k = 0; k < cols.length; k++) {
         var col = cols[k];
         obj[col] = row[k];
       }
+      obj = Object.assign(obj, resultTags[_i]);
       records.push(obj);
     }
 
@@ -103,9 +113,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
 
     //find the latest running record
     var runnings = records.filter(function (record) {
-      if (record.record_state) {
-        return record.order_state.toLowerCase() === 'running';
-      }
+      return record.order_state.toLowerCase() === 'running';
     });
     var filteredRunnings = runnings.filter(function (running) {
       return running.order_id !== tags.orderId || running.product_id !== tags.productId;
@@ -128,8 +136,8 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     }
 
     // console.log(records)
-    // console.log(current);
-    // console.log(running)
+    // console.log('cur',current);
+    // console.log('runn',running)
     return [current, running];
   }
 
@@ -254,7 +262,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
       line += 'actual_end_datetime=' + moment.now() + ',';
     }
 
-    line += 'order_state="' + status + '"' + ',';
+    //line += 'order_state="' + status + '"' + ','
     line += 'order_date="' + data.order_date + '"' + ',';
     line += 'production_line="' + data.production_line + '"' + ',';
     line += 'order_qty=' + data.order_qty + ',';
