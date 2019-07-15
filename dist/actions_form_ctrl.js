@@ -98,9 +98,13 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     });
     var current = currents[currents.length - 1];
 
+    console.log(records);
+
     //find the latest running record
     var runnings = records.filter(function (record) {
-      return record.order_state.toLowerCase() === 'running';
+      if (record.record_state) {
+        return record.order_state.toLowerCase() === 'running';
+      }
     });
     var filteredRunnings = runnings.filter(function (running) {
       return running.order_id !== tags.orderId || running.product_id !== tags.productId;

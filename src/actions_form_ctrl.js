@@ -105,7 +105,11 @@ function formatData(res, tags){
   const current = currents[currents.length - 1]
 
   //find the latest running record
-  const runnings = records.filter(record => record.order_state.toLowerCase() === 'running')
+  const runnings = records.filter(record => {
+    if (record.record_state){
+      return record.order_state.toLowerCase() === 'running'
+    }
+  })
   const filteredRunnings = runnings.filter(running => running.order_id !== tags.orderId || running.product_id !== tags.productId)
   let running = filteredRunnings[filteredRunnings.length - 1]
   
