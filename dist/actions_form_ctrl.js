@@ -111,6 +111,8 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     });
     var current = currents[currents.length - 1];
 
+    console.log(current);
+
     //find the latest running record
     var runnings = records.filter(function (record) {
       return record.order_state.toLowerCase() === 'running';
