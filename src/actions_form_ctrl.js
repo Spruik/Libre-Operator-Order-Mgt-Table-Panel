@@ -91,6 +91,8 @@ function formatData(res, tags){
 
   const series = res.results[0].series
 
+  console.log(res)
+
   let cols = series[0].columns
   cols = cols.map(x => x.substring(5, x.length))
   cols[0] = "time"

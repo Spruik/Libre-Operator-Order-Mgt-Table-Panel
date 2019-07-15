@@ -83,6 +83,8 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
 
     var series = res.results[0].series;
 
+    console.log(res);
+
     var cols = series[0].columns;
     cols = cols.map(function (x) {
       return x.substring(5, x.length);
