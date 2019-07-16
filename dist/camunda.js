@@ -49,7 +49,12 @@ System.register(['./utils'], function (_export, _context) {
             },
             applicators: p.ingredient.applicators
           },
-          isManual: false,
+          meta: {
+            isManual: false,
+            checkCount: 1,
+            isLastCheck: false,
+            rangeMetrix: {}
+          },
           conditionOfBelts: 'Good',
           beltDescription: null
         };
@@ -89,7 +94,10 @@ System.register(['./utils'], function (_export, _context) {
         var toSend = {
           variables: {
             _currentLine: { value: line, type: "String" },
-            _product: { value: JSON.stringify(p), type: "String" }
+            _currentCheck: { value: 1, type: "Long" },
+            _lastCheck: { value: false, type: "Boolean" },
+            _product: { value: JSON.stringify(p), type: "json" },
+            _allChecks: { value: "[]", type: "json" }
           },
           businessKey: null
         };
