@@ -7,6 +7,7 @@ import {tablePanelEditor} from './editor';
 import {columnOptionsTab} from './column_options';
 import {TableRenderer} from './renderer';
 import {showActionForm} from './actions_form_ctrl'
+import * as utils from './utils'
 
 import './css/style.css!';
 import './css/instant-serach.css!';
@@ -81,8 +82,16 @@ export class TableCtrl extends MetricsPanelCtrl {
         }
       })
       
-      //rowData index 0 = prod line, 1 = order id, 2 = prod desc, 3 = prod id
-      showActionForm(rowData[0],rowData[1],rowData[2],rowData[3])
+      const prodLineIndex = $scope.ctrl.colDimensions.indexOf("production_line")
+      const orderIdIndex = $scope.ctrl.colDimensions.indexOf("order_id")
+      const prodDescIndex = $scope.ctrl.colDimensions.indexOf("product_desc")
+      const prodIdIndex = $scope.ctrl.colDimensions.indexOf("product_id")
+      if (!~prodLineIndex || !~orderIdIndex || !~prodDescIndex || !~prodIdIndex) {
+        utils.alert('error', 'Error', 'Get not get this order from the database, please contact the dev team')
+        return
+      }else {
+        showActionForm(rowData[prodLineIndex],rowData[orderIdIndex],rowData[prodDescIndex],rowData[prodIdIndex])
+      }
     })
   }
 
@@ -121,12 +130,8 @@ export class TableCtrl extends MetricsPanelCtrl {
 
   onDataReceived(dataList) {    
 
-    // time range
-    const from = this.templateSrv.timeRange.from
-    const to = this.templateSrv.timeRange.to
-
     dataList = this.reorderData(dataList)
-    dataList = this.filter(dataList,from,to)
+    dataList = this.filter(dataList)
     dataList = this.sort(dataList, "scheduled_start_datetime") // sort rows so that all rows are sort/order by scheduled_start_time
 
     this.dataRaw = dataList;
@@ -177,9 +182,8 @@ export class TableCtrl extends MetricsPanelCtrl {
     return dataList
   }
 
-  // 1. filter out records that are not of status of 'Replaced'
-  // 2. filter out records that are not in the time range
-  filter(dataList, from, to){
+  // filter out records that are not of status of 'Replaced'
+  filter(dataList){
     if (dataList.length === 0) {
         return dataList
     }
@@ -188,14 +192,7 @@ export class TableCtrl extends MetricsPanelCtrl {
     rows = rows.filter(row => {
         const lowerCaseRow = row.map(elem => (typeof elem === 'string') ? elem.toLowerCase() : elem)
         if (lowerCaseRow.indexOf('replaced') === -1 && lowerCaseRow.indexOf('deleted') === -1) {
-          const scheduledStartTimeTimeStamp = row[10] // the scheduled start time is the 10th elem
-          const scheduledStartTime = moment(scheduledStartTimeTimeStamp) // moment shcedule start time
-          const changeover = moment.duration(row[9], 'H:mm:ss') // moment changeover
-          scheduledStartTime.subtract(changeover) // start time - changeover to have the initial time
-          if (scheduledStartTime.isSameOrAfter(from) && scheduledStartTime.isSameOrBefore(to)) {
-            // if scheduled start time >= $from && <= $to
-            return row
-          }
+          return row
         }
     })
     dataList[0].rows = rows
@@ -335,6 +332,11 @@ export class TableCtrl extends MetricsPanelCtrl {
       appendPaginationControls(footerElem);
 
       rootElem.css({ 'max-height': panel.scroll ? getTableHeight() : '' });
+
+      // get current table column dimensions 
+      if (ctrl.table.columns) {
+        ctrl.colDimensions = ctrl.table.columns.filter(x => !x.hidden).map(x => x.text)
+      }
     }
 
     // hook up link tooltips

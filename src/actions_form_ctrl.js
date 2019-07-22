@@ -91,7 +91,7 @@ function formatData(res, tags){
 
   const series = res.results[0].series
 
-  console.log(res)
+  // console.log(res)
 
   let cols = series[0].columns
   cols = cols.map(x => x.substring(5, x.length))
@@ -117,7 +117,7 @@ function formatData(res, tags){
   const currents = records.filter(record => record.order_id === tags.orderId && record.product_id === tags.productId && record.product_desc === tags.description)
   const current = currents[currents.length - 1]
 
-  console.log(current)
+  // console.log(current)
 
   //find the latest running record
   const runnings = records.filter(record => record.order_state.toLowerCase() === 'running')
@@ -277,7 +277,7 @@ function writeInfluxLine(data, status, rate){
   line += 'setpoint_rate=' + rate + ','
   line += 'planned_rate=' + data.planned_rate
 
-  console.log(line);
+  // console.log(line);
   return line
 }
 

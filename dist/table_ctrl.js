@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformers', './editor', './column_options', './renderer', './actions_form_ctrl', './css/style.css!', './css/instant-serach.css!'], function (_export, _context) {
+System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformers', './editor', './column_options', './renderer', './actions_form_ctrl', './utils', './css/style.css!', './css/instant-serach.css!'], function (_export, _context) {
   "use strict";
 
-  var _, $, moment, MetricsPanelCtrl, transformDataToTable, tablePanelEditor, columnOptionsTab, TableRenderer, showActionForm, _slicedToArray, _createClass, _get, panelDefaults, _ctrl, TableCtrl;
+  var _, $, moment, MetricsPanelCtrl, transformDataToTable, tablePanelEditor, columnOptionsTab, TableRenderer, showActionForm, utils, _slicedToArray, _createClass, _get, panelDefaults, _ctrl, TableCtrl;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -66,6 +66,8 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
       TableRenderer = _renderer.TableRenderer;
     }, function (_actions_form_ctrl) {
       showActionForm = _actions_form_ctrl.showActionForm;
+    }, function (_utils) {
+      utils = _utils;
     }, function (_cssStyleCss) {}, function (_cssInstantSerachCss) {}],
     execute: function () {
       _slicedToArray = function () {
@@ -217,8 +219,16 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
               }
             });
 
-            //rowData index 0 = prod line, 1 = order id, 2 = prod desc, 3 = prod id
-            showActionForm(rowData[0], rowData[1], rowData[2], rowData[3]);
+            var prodLineIndex = $scope.ctrl.colDimensions.indexOf("production_line");
+            var orderIdIndex = $scope.ctrl.colDimensions.indexOf("order_id");
+            var prodDescIndex = $scope.ctrl.colDimensions.indexOf("product_desc");
+            var prodIdIndex = $scope.ctrl.colDimensions.indexOf("product_id");
+            if (!~prodLineIndex || !~orderIdIndex || !~prodDescIndex || !~prodIdIndex) {
+              utils.alert('error', 'Error', 'Get not get this order from the database, please contact the dev team');
+              return;
+            } else {
+              showActionForm(rowData[prodLineIndex], rowData[orderIdIndex], rowData[prodDescIndex], rowData[prodIdIndex]);
+            }
           });
           return _this;
         }
@@ -262,12 +272,8 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
           key: 'onDataReceived',
           value: function onDataReceived(dataList) {
 
-            // time range
-            var from = this.templateSrv.timeRange.from;
-            var to = this.templateSrv.timeRange.to;
-
             dataList = this.reorderData(dataList);
-            dataList = this.filter(dataList, from, to);
+            dataList = this.filter(dataList);
             dataList = this.sort(dataList, "scheduled_start_datetime"); // sort rows so that all rows are sort/order by scheduled_start_time
 
             this.dataRaw = dataList;
@@ -321,7 +327,7 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
           }
         }, {
           key: 'filter',
-          value: function filter(dataList, from, to) {
+          value: function filter(dataList) {
             if (dataList.length === 0) {
               return dataList;
             }
@@ -332,14 +338,7 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
                 return typeof elem === 'string' ? elem.toLowerCase() : elem;
               });
               if (lowerCaseRow.indexOf('replaced') === -1 && lowerCaseRow.indexOf('deleted') === -1) {
-                var scheduledStartTimeTimeStamp = row[10]; // the scheduled start time is the 10th elem
-                var scheduledStartTime = moment(scheduledStartTimeTimeStamp); // moment shcedule start time
-                var changeover = moment.duration(row[9], 'H:mm:ss'); // moment changeover
-                scheduledStartTime.subtract(changeover); // start time - changeover to have the initial time
-                if (scheduledStartTime.isSameOrAfter(from) && scheduledStartTime.isSameOrBefore(to)) {
-                  // if scheduled start time >= $from && <= $to
-                  return row;
-                }
+                return row;
               }
             });
             dataList[0].rows = rows;
@@ -502,6 +501,15 @@ System.register(['lodash', 'jquery', 'moment', 'app/plugins/sdk', './transformer
               appendPaginationControls(footerElem);
 
               rootElem.css({ 'max-height': panel.scroll ? getTableHeight() : '' });
+
+              // get current table column dimensions 
+              if (ctrl.table.columns) {
+                ctrl.colDimensions = ctrl.table.columns.filter(function (x) {
+                  return !x.hidden;
+                }).map(function (x) {
+                  return x.text;
+                });
+              }
             }
 
             // hook up link tooltips

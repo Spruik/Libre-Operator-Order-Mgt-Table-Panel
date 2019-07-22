@@ -83,7 +83,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
 
     var series = res.results[0].series;
 
-    console.log(res);
+    // console.log(res)
 
     var cols = series[0].columns;
     cols = cols.map(function (x) {
@@ -113,7 +113,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     });
     var current = currents[currents.length - 1];
 
-    console.log(current);
+    // console.log(current)
 
     //find the latest running record
     var runnings = records.filter(function (record) {
@@ -276,7 +276,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     line += 'setpoint_rate=' + rate + ',';
     line += 'planned_rate=' + data.planned_rate;
 
-    console.log(line);
+    // console.log(line);
     return line;
   }
 
