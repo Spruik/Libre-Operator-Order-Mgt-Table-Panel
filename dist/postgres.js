@@ -10,7 +10,7 @@ System.register(['./utils'], function (_export, _context) {
     }],
     execute: function () {
       _export('getProductById', getProductById = function getProductById(id, success) {
-        var url = utils.postgRestHost + 'products?product_id=eq.' + id;
+        var url = utils.postgRestHost + 'product?id=eq.' + id;
         utils.get(url).then(function (res) {
           success(res);
         }).catch(function (e) {

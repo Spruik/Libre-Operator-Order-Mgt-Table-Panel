@@ -28,25 +28,9 @@ System.register(['./utils'], function (_export, _context) {
         });
 
         var check = {
-          productId: p.product_id,
+          productId: p.id,
           productDescription: p.product_desc,
           ingredient: {
-            crust: {
-              name: p.ingredient.crust.name,
-              formulaWt: p.ingredient.crust.gramsOnScale,
-              actualWt: null,
-              actualAvg: null,
-              actualDiff: null,
-              tolerance: p.ingredient.crust.tolerance
-            },
-            sauce: {
-              name: p.ingredient.sauce.name,
-              formulaWt: p.ingredient.sauce.gramsOnScale,
-              actualWt: null,
-              actualAvg: null,
-              actualDiff: null,
-              tolerance: p.ingredient.sauce.tolerance
-            },
             applicators: p.ingredient.applicators
           },
           meta: {

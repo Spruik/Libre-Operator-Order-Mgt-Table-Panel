@@ -3,7 +3,7 @@
 System.register(['app/core/core', './utils', './table_ctrl', './postgres', './camunda', 'moment'], function (_export, _context) {
   "use strict";
 
-  var appEvents, get, influxHost, post, alert, tableCtrl, postgres, camunda, moment, rowData, runningRecord, closeForm;
+  var appEvents, get, influxHost, post, alert, tableCtrl, postgres, camunda, utils, moment, rowData, runningRecord, closeForm;
 
 
   function showActionForm(productionLine, orderId, description, productId) {
@@ -165,12 +165,20 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
           if (runningRecord) {
             updateNextToRunningAndRunningExist(rowData, runningRecord, rowData.planned_rate);
             postgres.getProductById(rowData.product_id, function (res) {
-              camunda.startQACheck(res[0], rowData.production_line);
+              if (res.length === 0) {
+                utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM');
+              } else {
+                camunda.startQACheck(res[0], rowData.production_line);
+              }
             });
           } else {
             updateRecord(rowData, 'Running', rowData.planned_rate);
             postgres.getProductById(rowData.product_id, function (res) {
-              camunda.startQACheck(res[0], rowData.production_line);
+              if (res.length === 0) {
+                utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM');
+              } else {
+                camunda.startQACheck(res[0], rowData.production_line);
+              }
             });
           }
         } else {
@@ -288,6 +296,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
       influxHost = _utils.influxHost;
       post = _utils.post;
       alert = _utils.alert;
+      utils = _utils;
     }, function (_table_ctrl) {
       tableCtrl = _table_ctrl;
     }, function (_postgres) {

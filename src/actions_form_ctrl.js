@@ -4,6 +4,7 @@ import { get, influxHost, post, alert } from './utils'
 import * as tableCtrl from './table_ctrl'
 import * as postgres from './postgres'
 import * as camunda from './camunda'
+import * as utils from './utils'
 import moment from 'moment'
 
 let rowData
@@ -161,12 +162,20 @@ function addListeners() {
         if (runningRecord) {          
           updateNextToRunningAndRunningExist(rowData, runningRecord, rowData.planned_rate)
           postgres.getProductById(rowData.product_id, res => {
-            camunda.startQACheck(res[0], rowData.production_line)
+            if (res.length === 0) {
+              utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM')
+            }else {
+              camunda.startQACheck(res[0], rowData.production_line)
+            }
           })
         }else {
           updateRecord(rowData, 'Running', rowData.planned_rate)
           postgres.getProductById(rowData.product_id, res => {
-            camunda.startQACheck(res[0], rowData.production_line)
+            if (res.length === 0) {
+              utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM')
+            }else {
+              camunda.startQACheck(res[0], rowData.production_line)
+            }
           })
         }
       }else {
