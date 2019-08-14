@@ -270,7 +270,7 @@ function writeInfluxLine(data, status, rate){
     line += 'actual_end_datetime=' + data.actual_end_datetime + ','
   }
 
-  if (status === cons.STATE_START && (data.actual_start_datetime === null && data.actual_start_datetime === undefined)) {
+  if (status === cons.STATE_START && (data.actual_start_datetime === null || data.actual_start_datetime === undefined)) {
     //set actual start time = now if there is no actual
     //but do nothing if there is acutal start time, meaning that it was paused and start again
     line += 'actual_start_datetime=' + moment.now() + ','
