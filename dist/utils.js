@@ -3,7 +3,7 @@
 System.register(['app/core/core'], function (_export, _context) {
   "use strict";
 
-  var appEvents, hostname, http, postgRestHost, influxHost, tasklistHostName, camundaHost, camundaRestApi, post, get, alert;
+  var appEvents, hostname, http, postgRestHost, influxHost, tasklistHostName, camundaHost, camundaRestApi, post, get, alert, showModal, sure;
   return {
     setters: [function (_appCoreCore) {
       appEvents = _appCoreCore.appEvents;
@@ -94,6 +94,26 @@ System.register(['app/core/core'], function (_export, _context) {
       });
 
       _export('alert', alert);
+
+      _export('showModal', showModal = function showModal(html, data, mClass) {
+        appEvents.emit('show-modal', {
+          src: 'public/plugins/smart-factory-operator-order-mgt-table-panel/partials/' + html,
+          modalClass: mClass || 'confirm-modal',
+          model: data
+        });
+      });
+
+      _export('showModal', showModal);
+
+      _export('sure', sure = function sure(promise) {
+        return promise.then(function (data) {
+          return { ok: true, data: data };
+        }).catch(function (error) {
+          return Promise.resolve({ ok: false, error: error });
+        });
+      });
+
+      _export('sure', sure);
     }
   };
 });

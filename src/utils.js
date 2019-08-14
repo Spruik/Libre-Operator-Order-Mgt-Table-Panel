@@ -62,3 +62,16 @@ export const get = url => {
 export const alert = (type, title, msg) => {
     appEvents.emit('alert-' + type, [title, msg])
 }
+
+export const showModal = (html, data, mClass) => {
+  appEvents.emit('show-modal', {
+    src: 'public/plugins/smart-factory-operator-order-mgt-table-panel/partials/' + html,
+    modalClass: mClass || 'confirm-modal',
+    model: data
+  })
+}
+
+export const sure = promise => 
+  promise
+  .then(data => ({ok: true, data}))
+  .catch(error => Promise.resolve({ok: false, error}));

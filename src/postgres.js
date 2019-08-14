@@ -8,3 +8,8 @@ export const getProductById = (id, success) => {
     utils.alert('error', 'Connection Error', `Camunda QA Check Process failed to start due to ${e} but you can still start it manually`)
   })
 }
+
+export const getOrderStates = async () => {
+  const url = `${utils.postgRestHost}order_state`
+  return await utils.sure(utils.get(url)) 
+}

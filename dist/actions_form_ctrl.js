@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/core/core', './utils', './table_ctrl', './postgres', './camunda', 'moment'], function (_export, _context) {
+System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ctrl', './postgres', './camunda', './constants', 'moment'], function (_export, _context) {
   "use strict";
 
-  var appEvents, get, influxHost, post, alert, tableCtrl, postgres, camunda, utils, moment, rowData, runningRecord, closeForm;
+  var appEvents, get, influxHost, post, alert, tableCtrl, ConfirmCtrl, postgres, camunda, utils, cons, moment, rowData, runningRecord, orderStates, allRecords, closeForm;
 
 
   function showActionForm(productionLine, orderId, description, productId) {
@@ -16,7 +16,14 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
 
     getRowData(callback, tags);
 
-    function callback() {
+    async function callback() {
+      var result = await postgres.getOrderStates();
+      if (result.ok) {
+        orderStates = result.data;
+      } else {
+        utils.alert('error', 'Connection Error', 'Cannot get Order States from Postgres database due to ' + result.error + ', please try again or contact the dev team');
+        return;
+      }
       if (rowData.order_state) {
         if (rowData.order_state.toLowerCase() === 'planned') {
           alert('warning', 'Warning', 'This order has NOT been released');
@@ -50,8 +57,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     var url = getInfluxLine(tags);
     get(url).then(function (res) {
       var result = formatData(res, tags);
-      rowData = result[0];
-      runningRecord = result[1];
+      rowData = result;
       callback();
     }).catch(function (e) {
       alert('error', 'Database Error', 'Database connection failed with influxdb');
@@ -83,8 +89,6 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
 
     var series = res.results[0].series;
 
-    // console.log(res)
-
     var cols = series[0].columns;
     cols = cols.map(function (x) {
       return x.substring(5, x.length);
@@ -108,41 +112,53 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
       records.push(obj);
     }
 
+    allRecords = records;
     var currents = records.filter(function (record) {
       return record.order_id === tags.orderId && record.product_id === tags.productId && record.product_desc === tags.description;
     });
     var current = currents[currents.length - 1];
 
-    // console.log(current)
+    return current;
+  }
 
-    //find the latest running record
-    var runnings = records.filter(function (record) {
-      return record.order_state.toLowerCase() === 'running';
+  function isStateCheckOK(rowData, to) {
+    var conflict = null;
+    var from = rowData.order_state;
+    var fromStates = orderStates.filter(function (x) {
+      return x.state === from.toLowerCase();
     });
-    var filteredRunnings = runnings.filter(function (running) {
-      return running.order_id !== tags.orderId || running.product_id !== tags.productId;
+    var toStates = orderStates.filter(function (x) {
+      return x.state === to.toLowerCase();
     });
-    var running = filteredRunnings[filteredRunnings.length - 1];
 
-    //If the records of that line is new, there might be no 'running' at all, return!
-    if (running === null || running === undefined) {
-      return [current, null];
+    if (fromStates.length === 0) {
+      utils.alert('warning', 'Warning', 'State ' + from + ' not found from the config table in postgresdb, please finish order state configuration first');
+      return false;
+    } else if (toStates.length === 0) {
+      utils.alert('warning', 'Warning', 'State ' + to + ' not found from the config table in postgresdb, please finish order state configuration first');
+      return false;
     }
 
-    //check if the latest running record is the latest record in it's own group
-    //becuase there is possibility that the record is set to paused, so the latest running record is not the latest record for that group
-    var runningGroups = records.filter(function (record) {
-      return record.order_id === running.order_id && record.product_id === running.product_id && record.product_desc === running.product_desc;
-    });
-    var isRunningTheLatest = _.isEqual(running, runningGroups[runningGroups.length - 1]);
-    if (!isRunningTheLatest) {
-      running = null;
+    var toState = toStates[0];
+    var fromState = fromStates[0];
+    var options = fromState.state_options;
+    var index = options.indexOf(to.toLowerCase());
+    if (!~index) {
+      utils.alert('warning', 'Warning', 'You can not change state from <' + from.toLowerCase() + '> to <' + to + '>');
+      return false;
     }
 
-    // console.log(records)
-    // console.log('cur',current);
-    // console.log('runn',running)
-    return [current, running];
+    if (toState.is_unique) {
+      var conflicts = allRecords.filter(function (x) {
+        return x.order_state.toLowerCase() === toState.state.toLowerCase();
+      });
+      if (conflicts.length !== 0) {
+        conflict = conflicts[0];
+        conflict.toState = toState.backup_state;
+      }
+    }
+
+    return [true, conflict];
   }
 
   /**
@@ -155,88 +171,72 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
     $(document).on('click', 'input[type="button"][name="order-mgt-operator-actions-radio"]', function (e) {
 
       if (e.target.id === 'flag') {
-        if (rowData.order_state.toLowerCase() === 'ready' || rowData.order_state.toLowerCase() === 'paused') {
-          updateRecord(rowData, 'Next', 0);
-        } else {
-          alert('warning', 'Warning', 'Only orders in Ready or Paused state can be flagged');
-        }
+        prepareUpdate(cons.STATE_FLAG, 0);
       } else if (e.target.id === 'start') {
-        if (rowData.order_state.toLowerCase() === 'next') {
-          if (runningRecord) {
-            updateNextToRunningAndRunningExist(rowData, runningRecord, rowData.planned_rate);
-            postgres.getProductById(rowData.product_id, function (res) {
-              if (res.length === 0) {
-                utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM');
-              } else {
-                camunda.startQACheck(res[0], rowData.production_line);
-              }
-            });
-          } else {
-            updateRecord(rowData, 'Running', rowData.planned_rate);
-            postgres.getProductById(rowData.product_id, function (res) {
-              if (res.length === 0) {
-                utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM');
-              } else {
-                camunda.startQACheck(res[0], rowData.production_line);
-              }
-            });
-          }
-        } else {
-          alert('warning', 'Warning', 'Only orders in Next state can be started');
-        }
+        prepareUpdate(cons.STATE_START, rowData.planned_rate);
       } else if (e.target.id === 'pause') {
-        if (rowData.order_state.toLowerCase() === 'running') {
-          updateRecord(rowData, 'Paused', 0);
-        } else {
-          alert('warning', 'Warning', 'Only orders in Running state can be paused');
-        }
+        prepareUpdate(cons.STATE_PAUSE, 0);
       } else if (e.target.id === 'complete') {
-        if (rowData.order_state.toLowerCase() === 'running' || rowData.order_state.toLowerCase() === 'paused') {
-          updateRecord(rowData, 'Complete', 0);
-        } else {
-          alert('warning', 'Warning', 'Only orders in Running or Paused state can be complete');
-        }
+        prepareUpdate(cons.STATE_COMPLETE, 0);
       } else if (e.target.id === 'close') {
-        if (rowData.order_state.toLowerCase() === 'complete') {
-          updateRecord(rowData, 'Closed', 0);
-        } else {
-          alert('warning', 'Warning', 'Only orders in Complete state can be closed');
-        }
+        prepareUpdate(cons.STATE_CLOSE, 0);
       }
     });
+  }
+
+  function prepareUpdate(state, rate) {
+    var result = isStateCheckOK(rowData, state);
+    var ok = result[0];
+    var conflict = result[1];
+    if (ok) {
+      updateRecord(rowData, conflict, state, rate);
+    }
   }
 
   function removeListeners() {
     $(document).off('click', 'input[type="button"][name="order-mgt-operator-actions-radio"]');
   }
 
-  function updateRecord(data, status, rate) {
-    var line = writeInfluxLine(data, status, rate);
+  async function updateRecord(data, conflict, toState, rate) {
+
+    var fromState = data.order_state.toLowerCase();
+    var line = writeInfluxLine(data, toState, rate);
     var url = influxHost + 'write?db=smart_factory';
-    post(url, line).then(function (res) {
-      alert('success', 'Success', 'Order ' + rowData.order_id + ' has been marked as ' + status);
-      closeForm();
-      tableCtrl.refresh();
-    }).catch(function (e) {
-      alert('error', 'Error', 'An error occurred while updating the database, please check your database connection');
-      closeForm();
-      console.log(e);
+
+    if (conflict) {
+      var conflictLine = writeInfluxLine(conflict, conflict.toState || fromState, 0);
+      var conflictToState = conflict.toState || fromState;
+      var confirm = new ConfirmCtrl({ tableCtrl: tableCtrl, data: data, conflict: conflict, conflictToState: conflictToState, toState: toState, line: line, conflictLine: conflictLine, url: url, sendCamundaQACheck: sendCamundaQACheck });
+      confirm.show();
+    } else {
+      var result = await utils.sure(utils.post(url, line));
+      showAlerts(result, data.order_id, toState);
+      if (toState.toLowerCase() === cons.STATE_START.toLowerCase()) {
+        sendCamundaQACheck(data);
+      }
+    }
+  }
+
+  function sendCamundaQACheck(data) {
+    postgres.getProductById(data.product_id, function (res) {
+      if (res.length === 0) {
+        utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM');
+      } else {
+        camunda.startQACheck(res[0], data.production_line);
+      }
     });
   }
 
-  function updateNextToRunningAndRunningExist(cur, run, rate) {
-    var currentLine = writeInfluxLine(cur, 'Running', rate);
-    var runningLine = writeInfluxLine(run, 'Complete', 0);
-    var url = influxHost + 'write?db=smart_factory';
-    post(url, runningLine).then(post(url, currentLine).then(function (res) {
-      alert('success', 'Success', 'Order ' + cur.order_id + ' has been marked as Running');
+  function showAlerts(result, id, state) {
+    if (result.ok) {
+      alert('success', 'Success', 'Order ' + id + ' has been marked as ' + state);
       closeForm();
       tableCtrl.refresh();
-    })).catch(function (e) {
-      alert('error', 'Error', 'An error occurred while updating the database, please check your database connection');
+    } else {
+      alert('error', 'Error', 'An error occurred while updating the database due to ' + result.error + ', please try again or contact the dev team');
       closeForm();
-      console.log(e);
-    });
+      console.log(result.error);
+    }
   }
 
   /**
@@ -266,10 +266,11 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
       line += 'actual_end_datetime=' + data.actual_end_datetime + ',';
     }
 
-    if (status === 'Running') {
-      //set actual start time = now
+    if (status === cons.STATE_START && data.actual_start_datetime === null && data.actual_start_datetime === undefined) {
+      //set actual start time = now if there is no actual
+      //but do nothing if there is acutal start time, meaning that it was paused and start again
       line += 'actual_start_datetime=' + moment.now() + ',';
-    } else if (status === 'Complete') {
+    } else if (status === cons.STATE_COMPLETE) {
       //set actual end time = now
       line += 'actual_end_datetime=' + moment.now() + ',';
     }
@@ -299,16 +300,22 @@ System.register(['app/core/core', './utils', './table_ctrl', './postgres', './ca
       utils = _utils;
     }, function (_table_ctrl) {
       tableCtrl = _table_ctrl;
+    }, function (_confirm_modal_ctrl) {
+      ConfirmCtrl = _confirm_modal_ctrl.ConfirmCtrl;
     }, function (_postgres) {
       postgres = _postgres;
     }, function (_camunda) {
       camunda = _camunda;
+    }, function (_constants) {
+      cons = _constants;
     }, function (_moment) {
       moment = _moment.default;
     }],
     execute: function () {
       rowData = void 0;
       runningRecord = {};
+      orderStates = {};
+      allRecords = [];
 
       closeForm = function closeForm() {
         $('#order-mgt-operator-action-form-dismiss-btn').trigger('click');

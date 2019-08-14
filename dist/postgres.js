@@ -3,7 +3,7 @@
 System.register(['./utils'], function (_export, _context) {
   "use strict";
 
-  var utils, getProductById;
+  var utils, getProductById, getOrderStates;
   return {
     setters: [function (_utils) {
       utils = _utils;
@@ -19,6 +19,13 @@ System.register(['./utils'], function (_export, _context) {
       });
 
       _export('getProductById', getProductById);
+
+      _export('getOrderStates', getOrderStates = async function getOrderStates() {
+        var url = utils.postgRestHost + 'order_state';
+        return await utils.sure(utils.get(url));
+      });
+
+      _export('getOrderStates', getOrderStates);
     }
   };
 });
