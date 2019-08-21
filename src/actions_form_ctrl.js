@@ -29,6 +29,7 @@ function showActionForm(productionLine, orderId, description, productId) {
   getRowData(callback, tags)
 
   async function callback() {
+    console.log('haha', rowData, tags)
     const result = await postgres.getOrderStates()
     if (result.ok) {
       orderStates = result.data
@@ -37,11 +38,11 @@ function showActionForm(productionLine, orderId, description, productId) {
       return
     }
     if (rowData.order_state) {
-      if (rowData.order_state.toLowerCase() === 'planned') {
+      if (rowData.order_state.toLowerCase() === cons.STATE_PLAN.toLowerCase()) {
         alert('warning', 'Warning', 'This order has NOT been released')
         return
       }
-      if (rowData.order_state.toLowerCase() === 'closed') {
+      if (rowData.order_state.toLowerCase() === cons.STATE_CLOSE.toLowerCase()) {
         alert('warning', 'Warning', 'This order has been closed')
         return
       }
@@ -84,7 +85,7 @@ function getRowData(callback, tags){
  */
 function getInfluxLine(tags){
   let url = influxHost + 'query?pretty=true&db=smart_factory&q=select last(*) from OrderPerformance' + ' where '
-  url += 'production_line=' + '\'' + tags.productionLine + '\'' + ' group by ' + '"product_desc", "product_id", "order_id"'
+  url += 'production_line=' + '\'' + tags.productionLine + '\'' + ' group by ' + '"product_id", "order_id"'
 
   // console.log(url)
   
@@ -250,9 +251,9 @@ function showAlerts(result, id, state) {
  */
 function writeInfluxLine(data, status, rate){
   //For influxdb tag keys, must add a forward slash \ before each space 
-  let product_desc = data.product_desc.split(' ').join('\\ ')
+  // let product_desc = data.product_desc.split(' ').join('\\ ')
 
-  let line = 'OrderPerformance,order_id=' + data.order_id + ',product_id=' + data.product_id + ',product_desc=' + product_desc + ' '
+  let line = 'OrderPerformance,order_id=' + data.order_id + ',product_id=' + data.product_id + ' '
 
   if (data.compl_qty !== null && data.compl_qty !== undefined) {
     line += 'compl_qty=' + data.compl_qty + ','
@@ -280,6 +281,7 @@ function writeInfluxLine(data, status, rate){
   }
 
   line += 'order_state="' + status + '"' + ','
+  line += 'product_desc="' + data.product_desc + '"' + ','
   line += 'order_date="' + data.order_date + '"' + ','
   line += 'production_line="' + data.production_line + '"' + ','
   line += 'order_qty=' + data.order_qty + ','

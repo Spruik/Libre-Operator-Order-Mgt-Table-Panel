@@ -17,6 +17,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
     getRowData(callback, tags);
 
     async function callback() {
+      console.log('haha', rowData, tags);
       var result = await postgres.getOrderStates();
       if (result.ok) {
         orderStates = result.data;
@@ -25,11 +26,11 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
         return;
       }
       if (rowData.order_state) {
-        if (rowData.order_state.toLowerCase() === 'planned') {
+        if (rowData.order_state.toLowerCase() === cons.STATE_PLAN.toLowerCase()) {
           alert('warning', 'Warning', 'This order has NOT been released');
           return;
         }
-        if (rowData.order_state.toLowerCase() === 'closed') {
+        if (rowData.order_state.toLowerCase() === cons.STATE_CLOSE.toLowerCase()) {
           alert('warning', 'Warning', 'This order has been closed');
           return;
         }
@@ -71,7 +72,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
    */
   function getInfluxLine(tags) {
     var url = influxHost + 'query?pretty=true&db=smart_factory&q=select last(*) from OrderPerformance' + ' where ';
-    url += 'production_line=' + '\'' + tags.productionLine + '\'' + ' group by ' + '"product_desc", "product_id", "order_id"';
+    url += 'production_line=' + '\'' + tags.productionLine + '\'' + ' group by ' + '"product_id", "order_id"';
 
     // console.log(url)
 
@@ -246,9 +247,9 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
    */
   function writeInfluxLine(data, status, rate) {
     //For influxdb tag keys, must add a forward slash \ before each space 
-    var product_desc = data.product_desc.split(' ').join('\\ ');
+    // let product_desc = data.product_desc.split(' ').join('\\ ')
 
-    var line = 'OrderPerformance,order_id=' + data.order_id + ',product_id=' + data.product_id + ',product_desc=' + product_desc + ' ';
+    var line = 'OrderPerformance,order_id=' + data.order_id + ',product_id=' + data.product_id + ' ';
 
     if (data.compl_qty !== null && data.compl_qty !== undefined) {
       line += 'compl_qty=' + data.compl_qty + ',';
@@ -276,6 +277,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
     }
 
     line += 'order_state="' + status + '"' + ',';
+    line += 'product_desc="' + data.product_desc + '"' + ',';
     line += 'order_date="' + data.order_date + '"' + ',';
     line += 'production_line="' + data.production_line + '"' + ',';
     line += 'order_qty=' + data.order_qty + ',';
