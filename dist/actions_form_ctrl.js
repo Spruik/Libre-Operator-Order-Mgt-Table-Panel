@@ -255,7 +255,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
       line += 'compl_qty=' + data.compl_qty + ',';
     }
     if (data.machine_state !== null && data.machine_state !== undefined) {
-      line += 'machine_state="' + data.machine_state + '"' + ',';
+      line += 'machine_state="' + getRid(data.machine_state) + '"' + ',';
     }
     if (data.scrap_qty !== null && data.scrap_qty !== undefined) {
       line += 'scrap_qty=' + data.scrap_qty + ',';
@@ -276,10 +276,10 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
       line += 'actual_end_datetime=' + moment.now() + ',';
     }
 
-    line += 'order_state="' + status + '"' + ',';
-    line += 'product_desc="' + data.product_desc + '"' + ',';
+    line += 'order_state="' + getRid(status) + '"' + ',';
+    line += 'product_desc="' + getRid(data.product_desc) + '"' + ',';
     line += 'order_date="' + data.order_date + '"' + ',';
-    line += 'production_line="' + data.production_line + '"' + ',';
+    line += 'production_line="' + getRid(data.production_line) + '"' + ',';
     line += 'order_qty=' + data.order_qty + ',';
     line += 'scheduled_end_datetime=' + data.scheduled_end_datetime + ',';
     line += 'scheduled_start_datetime=' + data.scheduled_start_datetime + ',';
@@ -289,6 +289,10 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
 
     // console.log(line);
     return line;
+  }
+
+  function getRid(x) {
+    return x.split('"').join('\\"');
   }
 
   return {
