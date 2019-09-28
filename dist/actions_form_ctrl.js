@@ -17,7 +17,6 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
 		getRowData(callback, tags);
 
 		async function callback() {
-			console.log('haha', rowData, tags);
 			var result = await postgres.getOrderStates();
 			if (result.ok) {
 				orderStates = result.data;
@@ -231,7 +230,7 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
 			if (res.length === 0) {
 				utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM');
 			} else {
-				camunda.startQACheck(res[0], data.production_line);
+				camunda.startQACheck(res[0], data.production_line, data.order_id);
 			}
 		});
 	}

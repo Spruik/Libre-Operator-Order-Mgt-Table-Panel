@@ -34,7 +34,7 @@ const restructure = (p) => {
 			isLastCheck: false,
 			rangeMetrix: {}
 		},
-		conditionOfBelts: 'Good',
+		conditionOfBelts: '',
 		beltDescription: null
 	};
 
@@ -62,7 +62,7 @@ const post = (url, param, json) => {
 	});
 };
 
-export const startQACheck = (product, line) => {
+export const startQACheck = (product, line, orderId) => {
 	const FORM_KEY = 'QAFormProductOnly';
 	const PATH = `process-definition/key/${FORM_KEY}/start`;
 
@@ -74,7 +74,8 @@ export const startQACheck = (product, line) => {
 			_currentCheck: { value: 1, type: 'Long' },
 			_lastCheck: { value: false, type: 'Boolean' },
 			_product: { value: JSON.stringify(p), type: 'json' },
-			_allChecks: { value: '[]', type: 'json' }
+			_allChecks: { value: '[]', type: 'json' },
+			_orderId: { value: orderId, type: 'String' }
 		},
 		businessKey: null
 	};
