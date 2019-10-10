@@ -33,9 +33,7 @@ const restructure = (p) => {
 			checkCount: 1,
 			isLastCheck: false,
 			rangeMetrix: {}
-		},
-		conditionOfBelts: '',
-		beltDescription: null
+		}
 	};
 
 	return check;
@@ -63,28 +61,90 @@ const post = (url, param, json) => {
 };
 
 export const startQACheck = (product, line, orderId) => {
-	const FORM_KEY = 'QAFormProductOnly';
+	const FORM_KEY = 'ProcessControlForm';
 	const PATH = `process-definition/key/${FORM_KEY}/start`;
 
-	const p = restructure(product);
-
-	const toSend = {
-		variables: {
-			_currentLine: { value: line, type: 'String' },
-			_currentCheck: { value: 1, type: 'Long' },
-			_lastCheck: { value: false, type: 'Boolean' },
-			_product: { value: JSON.stringify(p), type: 'json' },
-			_allChecks: { value: '[]', type: 'json' },
-			_orderId: { value: orderId, type: 'String' }
-		},
-		businessKey: null
+	// search for process to see if the process has already been exist
+	const searchPath = 'process-instance';
+	const query = {
+		variables: [
+			{
+				name: '_orderId',
+				operator: 'eq',
+				value: orderId
+			}
+		]
 	};
 
-	utils.alert('success', 'Starting...', 'A Camunda QA Check Process is starting...');
-
-	post(utils.camundaRestApi, PATH, JSON.stringify(toSend))
+	post(utils.camundaRestApi, searchPath, JSON.stringify(query))
 		.then((res) => {
-			utils.alert('success', 'Successful', 'A Camunda QA Check Process has been started');
+			const searchResponse = JSON.parse(res);
+			if (searchResponse.length > 0) {
+				// exist
+				utils.alert(
+					'success',
+					'Form already exist',
+					`The Process Control Form for order <${orderId}> is already exist`
+				);
+			} else {
+				// all good for creating a new form
+				const p = restructure(product);
+				const toSend = {
+					variables: {
+						_currentLine: { value: line, type: 'String' },
+						_checkForLineLead: { value: JSON.stringify(p), type: 'json' },
+						_checkForQA: { value: JSON.stringify(p), type: 'json' },
+						_allChecksForQA: { value: '[]', type: 'json' },
+						_allChecksForLineLead: { value: '[]', type: 'json' },
+						_orderId: { value: orderId, type: 'String' },
+						_productId: { value: product.id, type: 'String' },
+						_productDesc: { value: product.product_desc, type: 'String' },
+						_orderStartDateTime: { value: new Date().toISOString(), type: 'String' }
+					},
+					businessKey: null
+				};
+				utils.alert('success', 'Starting...', 'Creating Process Control Form, notification email sending...');
+
+				post(utils.camundaRestApi, PATH, JSON.stringify(toSend))
+					.then((res) => {
+						utils.alert(
+							'success',
+							'Successful',
+							`Process Control Form for order <${orderId}> has been created`
+						);
+					})
+					.catch((e) => {
+						utils.alert(
+							'error',
+							'Connection Error',
+							`Camunda QA Check Process failed to start due to ${e} but you can still start it manually`
+						);
+					});
+			}
+		})
+		.catch((e) => {
+			utils.alert(
+				'error',
+				'Connection Error',
+				`Camunda QA Check Process failed to start due to ${e} but you can still start it manually`
+			);
+		});
+};
+
+export const closeProcessControlForm = (orderId) => {
+	const toSend = {
+		messageName: 'processControlOrderEnded',
+		correlationKeys: {
+			_orderId: {
+				value: orderId,
+				type: 'String'
+			}
+		}
+	};
+
+	post(utils.camundaRestApi, 'message', JSON.stringify(toSend))
+		.then((res) => {
+			utils.alert('success', 'Successful', 'The Process Control Form for this order has been closed');
 		})
 		.catch((e) => {
 			utils.alert(

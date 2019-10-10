@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ctrl', './postgres', './camunda', './constants', 'moment'], function (_export, _context) {
+System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ctrl', './confirm_modal_complete_ctrl', './postgres', './camunda', './constants', 'moment'], function (_export, _context) {
 	"use strict";
 
-	var appEvents, get, influxHost, post, alert, tableCtrl, ConfirmCtrl, postgres, camunda, utils, cons, moment, rowData, runningRecord, orderStates, allRecords, closeForm;
+	var appEvents, get, influxHost, post, alert, tableCtrl, ConfirmCtrl, CompleteConfirmCtrl, postgres, camunda, utils, cons, moment, rowData, runningRecord, orderStates, allRecords, closeForm;
 
 
 	function showActionForm(productionLine, orderId, description, productId) {
@@ -217,10 +217,23 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
 			});
 			confirm.show();
 		} else {
-			var result = await utils.sure(utils.post(url, line));
-			showAlerts(result, data.order_id, toState);
-			if (toState.toLowerCase() === cons.STATE_START.toLowerCase()) {
-				sendCamundaQACheck(data);
+			// no conflict
+			if (toState.toLowerCase() === cons.STATE_COMPLETE.toLowerCase()) {
+				// if is to complete
+				var completeConfirm = new CompleteConfirmCtrl({
+					tableCtrl: tableCtrl,
+					data: data,
+					url: url,
+					line: line,
+					showAlerts: showAlerts
+				});
+				completeConfirm.show();
+			} else {
+				var result = await utils.sure(utils.post(url, line));
+				showAlerts(result, data.order_id, toState);
+				if (toState.toLowerCase() === cons.STATE_START.toLowerCase()) {
+					sendCamundaQACheck(data);
+				}
 			}
 		}
 	}
@@ -315,6 +328,8 @@ System.register(['app/core/core', './utils', './table_ctrl', './confirm_modal_ct
 			tableCtrl = _table_ctrl;
 		}, function (_confirm_modal_ctrl) {
 			ConfirmCtrl = _confirm_modal_ctrl.ConfirmCtrl;
+		}, function (_confirm_modal_complete_ctrl) {
+			CompleteConfirmCtrl = _confirm_modal_complete_ctrl.CompleteConfirmCtrl;
 		}, function (_postgres) {
 			postgres = _postgres;
 		}, function (_camunda) {

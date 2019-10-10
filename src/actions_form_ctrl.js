@@ -2,6 +2,7 @@ import { appEvents } from 'app/core/core';
 import { get, influxHost, post, alert } from './utils';
 import * as tableCtrl from './table_ctrl';
 import { ConfirmCtrl } from './confirm_modal_ctrl';
+import { CompleteConfirmCtrl } from './confirm_modal_complete_ctrl';
 import * as postgres from './postgres';
 import * as camunda from './camunda';
 import * as utils from './utils';
@@ -237,10 +238,23 @@ async function updateRecord(data, conflict, toState, rate) {
 		});
 		confirm.show();
 	} else {
-		const result = await utils.sure(utils.post(url, line));
-		showAlerts(result, data.order_id, toState);
-		if (toState.toLowerCase() === cons.STATE_START.toLowerCase()) {
-			sendCamundaQACheck(data);
+		// no conflict
+		if (toState.toLowerCase() === cons.STATE_COMPLETE.toLowerCase()) {
+			// if is to complete
+			const completeConfirm = new CompleteConfirmCtrl({
+				tableCtrl,
+				data,
+				url,
+				line,
+				showAlerts
+			});
+			completeConfirm.show();
+		} else {
+			const result = await utils.sure(utils.post(url, line));
+			showAlerts(result, data.order_id, toState);
+			if (toState.toLowerCase() === cons.STATE_START.toLowerCase()) {
+				sendCamundaQACheck(data);
+			}
 		}
 	}
 }
