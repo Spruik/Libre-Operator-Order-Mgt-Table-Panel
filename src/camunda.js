@@ -131,7 +131,7 @@ export const startQACheck = (product, line, orderId) => {
 		});
 };
 
-export const closeProcessControlForm = (orderId) => {
+export const closeProcessControlForm = (orderId, callback, onfailed) => {
 	const toSend = {
 		messageName: 'processControlOrderEnded',
 		correlationKeys: {
@@ -145,12 +145,14 @@ export const closeProcessControlForm = (orderId) => {
 	post(utils.camundaRestApi, 'message', JSON.stringify(toSend))
 		.then((res) => {
 			utils.alert('success', 'Successful', 'The Process Control Form for this order has been closed');
+			callback();
 		})
 		.catch((e) => {
 			utils.alert(
 				'error',
 				'Connection Error',
-				`Camunda QA Check Process failed to start due to ${e} but you can still start it manually`
+				`Camunda Process Control Form failed to complete due to ${e}, please try again`
 			);
+			onfailed();
 		});
 };

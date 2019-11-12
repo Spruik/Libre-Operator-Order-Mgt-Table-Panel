@@ -65,6 +65,7 @@ System.register(['./utils', './postgres', './camunda'], function (_export, _cont
 				}, {
 					key: 'prepare',
 					value: function prepare() {
+						this.showConfirmBtn = true;
 						this.modalTitle = 'Confirm Required';
 						this.confirmMsg = 'Are you sure you want to set this order to \'Complete\'? \n    Setting this to \'Complete\' will also CLOSE the Process Control Form related to this order';
 					}
@@ -76,22 +77,44 @@ System.register(['./utils', './postgres', './camunda'], function (_export, _cont
 				}, {
 					key: 'closeProcessControlForm',
 					value: function closeProcessControlForm(data) {
+						var _this = this;
+
 						postgres.getProductById(data.product_id, function (res) {
 							if (res.length === 0) {
 								utils.alert('error', 'Product Not Found', 'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM');
 							} else {
-								camunda.closeProcessControlForm(data.order_id);
+								_this.closeForm();
+								_this.showLoading();
+								camunda.closeProcessControlForm(data.order_id, async function () {
+									var result = await utils.sure(utils.post(_this.url, _this.line));
+									_this.showAlerts(result, _this.data.order_id, 'Complete');
+									_this.closeLoading();
+									_this.tableCtrl.refresh();
+								}, function () {
+									_this.closeLoading();
+								});
 							}
 						});
 					}
 				}, {
+					key: 'showLoading',
+					value: function showLoading() {
+						this.modalTitle = 'Closing Process Control Form';
+						this.confirmMsg = 'The process control form is now being closed, please wait ...';
+						this.showConfirmBtn = false;
+						utils.showModal('confirm_form.html', this);
+					}
+				}, {
+					key: 'closeLoading',
+					value: function closeLoading() {
+						setTimeout(function () {
+							document.querySelector('#op-mgt-confirm-modal-cancelBtn').click();
+						}, 0);
+					}
+				}, {
 					key: 'onConfirm',
-					value: async function onConfirm() {
-						var result = await utils.sure(utils.post(this.url, this.line));
-						this.showAlerts(result, this.data.order_id, 'Complete');
+					value: function onConfirm() {
 						this.closeProcessControlForm(this.data);
-						this.closeForm();
-						this.tableCtrl.refresh();
 					}
 				}, {
 					key: 'closeForm',

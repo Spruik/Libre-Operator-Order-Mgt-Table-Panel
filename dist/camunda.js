@@ -117,7 +117,7 @@ System.register(['./utils'], function (_export, _context) {
 
 			_export('startQACheck', startQACheck);
 
-			_export('closeProcessControlForm', closeProcessControlForm = function closeProcessControlForm(orderId) {
+			_export('closeProcessControlForm', closeProcessControlForm = function closeProcessControlForm(orderId, callback, onfailed) {
 				var toSend = {
 					messageName: 'processControlOrderEnded',
 					correlationKeys: {
@@ -130,8 +130,10 @@ System.register(['./utils'], function (_export, _context) {
 
 				post(utils.camundaRestApi, 'message', JSON.stringify(toSend)).then(function (res) {
 					utils.alert('success', 'Successful', 'The Process Control Form for this order has been closed');
+					callback();
 				}).catch(function (e) {
-					utils.alert('error', 'Connection Error', 'Camunda QA Check Process failed to start due to ' + e + ' but you can still start it manually');
+					utils.alert('error', 'Connection Error', 'Camunda Process Control Form failed to complete due to ' + e + ', please try again');
+					onfailed();
 				});
 			});
 

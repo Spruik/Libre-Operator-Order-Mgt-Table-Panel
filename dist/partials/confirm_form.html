@@ -20,9 +20,9 @@
         <div class="clearfix"></div>
       </div>
 
-      <div class="custom-separator" style="margin-top:30px"></div>
+      <div ng-if="model.showConfirmBtn" class="custom-separator" style="margin-top:30px"></div>
 
-      <div class="button-wrapper" style="text-align:center; margin-top:30px">
+      <div ng-if="model.showConfirmBtn" class="button-wrapper" style="text-align:center; margin-top:30px">
         <button
           type="button"
           class="btn btn-success"
