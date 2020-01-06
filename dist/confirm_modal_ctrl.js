@@ -62,6 +62,7 @@ System.register(['./utils', './constants'], function (_export, _context) {
 					key: 'prepare',
 					value: function prepare() {
 						this.confirmMsg = 'To set order <' + this.current.order_id + '> to <' + this.current.toState + '>, the order <' + this.conflict.order_id + '> will be set to <' + this.conflict.toState + '>. Are you sure you want to make the change?';
+						this.showConfirmBtn = true;
 					}
 				}, {
 					key: 'show',
