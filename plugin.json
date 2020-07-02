@@ -3,6 +3,11 @@
   "type": "panel",
   "name": "Order Operator Table",
   "info": {
+    "author": {
+      "name": "Spruik Technologies",
+      "email": "info@spruiktec.com",
+      "url": "https://spruiktec.com"
+    },
     "description": "A Libre panel to run and complete orders for manufacture",
     "keywords": ["table", "panel", "libre"],
     "links": [
