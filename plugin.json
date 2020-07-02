@@ -8,7 +8,7 @@
       "email": "info@spruiktec.com",
       "url": "https://spruiktec.com"
     },
-    "description": "A Libre panel to run and complete orders for manufacture",
+    "description": "A Libre panel to execute, pause and complete orders for manufacture",
     "keywords": ["table", "panel", "libre"],
     "links": [
       {"name": "Project site", "url": "https://github.com/Spruik/Libre-Operator-Order-Mgt-Table-Panel"},
