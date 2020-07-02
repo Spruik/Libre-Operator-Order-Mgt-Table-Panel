@@ -89,8 +89,6 @@ function getInfluxLine (tags) {
   let url = utils.influxHost + 'query?pretty=true&db=smart_factory&q=select last(*) from OrderPerformance' + ' where '
   url += 'production_line=' + "'" + tags.productionLine + "'" + ' group by ' + '"product_id", "order_id"'
 
-  // console.log(url)
-
   return url
 }
 
@@ -337,7 +335,6 @@ function writeInfluxLine (data, status, rate) {
   line += 'setpoint_rate=' + rate + ','
   line += 'planned_rate=' + data.planned_rate
 
-  // console.log(line);
   return line
 }
 
