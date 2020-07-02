@@ -1,3 +1,3 @@
-import { TableCtrl } from './table_ctrl';
+import { TableCtrl } from './table_ctrl'
 
-export { TableCtrl, TableCtrl as PanelCtrl };
+export { TableCtrl, TableCtrl as PanelCtrl }
