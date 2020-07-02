@@ -388,4 +388,4 @@ export function refreshDashboard() {
 	_ctrl.timeSrv.refreshDashboard();
 }
 
-TableCtrl.templateUrl = './partials/module.html';
+TableCtrl.templateUrl = 'public/plugins/libre-operator-order-mgt-table-panel/partials/module.html';

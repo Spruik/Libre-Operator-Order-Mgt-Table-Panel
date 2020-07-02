@@ -52,7 +52,7 @@ function showActionForm(productionLine, orderId, description, productId) {
 		}
 
 		appEvents.emit('show-modal', {
-			src: 'public/plugins/smart-factory-operator-order-mgt-table-panel/partials/actions_form.html',
+			src: 'public/plugins/libre-operator-order-mgt-table-panel/partials/actions_form.html',
 			modalClass: 'confirm-modal',
 			model: { orderId: tags.orderId }
 		});

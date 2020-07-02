@@ -1,14 +1,14 @@
 {
-  "name": "smart-factory-operator-order-mgt-table-panel",
+  "name": "libre-operator-order-mgt-table-panel",
   "version": "1.0.0",
-  "description": "A table for the operator to manage orders",
+  "description": "A Libre panel to run and complete orders for manufacture",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Spruik/smart-factory-operator-order-mgt-table-panel"
+    "url": "https://github.com/Spruik/Libre-Operator-Order-Mgt-Table-Panel"
   },
   "author": "Spruik Technologies",
   "bugs": {
-    "url": "https://github.com/Spruik/smart-factory-operator-order-mgt-table-panel/issues"
+    "url": "https://github.com/Spruik/Libre-Operator-Order-Mgt-Table-Panel/issues"
   },
   "main": "src/module.js",
   "scripts": {

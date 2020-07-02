@@ -65,7 +65,7 @@ export const alert = (type, title, msg) => {
 
 export const showModal = (html, data, mClass) => {
 	appEvents.emit('show-modal', {
-		src: 'public/plugins/smart-factory-operator-order-mgt-table-panel/partials/' + html,
+		src: 'public/plugins/libre-operator-order-mgt-table-panel/partials/' + html,
 		modalClass: mClass || 'confirm-modal',
 		model: data
 	});
