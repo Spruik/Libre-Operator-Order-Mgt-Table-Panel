@@ -1,7 +1,5 @@
 import * as utils from './utils'
 import * as postgres from './postgres'
-import * as camunda from './camunda'
-
 export class CompleteConfirmCtrl {
   /** @ngInject */
   constructor ({ data, tableCtrl, url, line, showAlerts }) {
@@ -29,30 +27,13 @@ export class CompleteConfirmCtrl {
   }
 
   closeProcessControlForm (data) {
-    postgres.getProductById(data.product_id, (res) => {
-      if (res.length === 0) {
-        utils.alert(
-          'error',
-          'Product Not Found',
-          'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM'
-        )
-      } else {
-        this.closeForm()
-        this.showLoading()
-        camunda.closeProcessControlForm(
-          data.order_id,
-          async () => {
-            const result = await utils.sure(utils.post(this.url, this.line))
-            this.showAlerts(result, this.data.order_id, 'Complete')
-            this.closeLoading()
-            this.tableCtrl.refresh()
-          },
-          () => {
-            this.closeLoading()
-          }
-        )
-      }
-    })
+    this.closeForm()
+    const f = async () => {
+      const result = await utils.sure(utils.post(this.url, this.line))
+      this.showAlerts(result, this.data.order_id, 'Complete')
+      this.tableCtrl.refresh()
+    }
+    f()
   }
 
   showLoading () {

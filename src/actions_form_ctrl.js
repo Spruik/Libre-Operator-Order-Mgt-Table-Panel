@@ -4,7 +4,6 @@ import * as tableCtrl from './table_ctrl'
 import { ConfirmCtrl } from './confirm_modal_ctrl'
 import { CompleteConfirmCtrl } from './confirm_modal_complete_ctrl'
 import * as postgres from './postgres'
-import * as camunda from './camunda'
 import * as cons from './constants'
 import moment from 'moment'
 
@@ -230,7 +229,7 @@ async function updateRecord (data, conflict, toState, rate) {
       line,
       conflictLine,
       url,
-      sendCamundaQACheck
+      sendQACheck
     })
     confirm.show()
   } else {
@@ -249,24 +248,14 @@ async function updateRecord (data, conflict, toState, rate) {
       const result = await utils.sure(utils.post(url, line))
       showAlerts(result, data.order_id, toState)
       if (toState.toLowerCase() === cons.STATE_START.toLowerCase()) {
-        sendCamundaQACheck(data)
+        sendQACheck(data)
       }
     }
   }
 }
 
-function sendCamundaQACheck (data) {
-  postgres.getProductById(data.product_id, (res) => {
-    if (res.length === 0) {
-      utils.alert(
-        'error',
-        'Product Not Found',
-        'Camunda QA Check process initialisation failed because this Product CANNOT be found in the database, it may be because the product definition has been changed, but you can still start it Manually in Camunda BPM'
-      )
-    } else {
-      camunda.startQACheck(res[0], data.production_line, data.order_id)
-    }
-  })
+function sendQACheck (data) {
+  // TODO: This feature is to be implemented
 }
 
 function showAlerts (result, id, state) {

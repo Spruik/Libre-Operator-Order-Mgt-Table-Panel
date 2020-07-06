@@ -5,13 +5,6 @@ const proto = window.location.protocol + '//'
 export const postgRestHost = proto + hostname + ':5436/'
 export const influxHost = proto + hostname + ':8086/'
 
-let tasklistHostName = hostname
-if (tasklistHostName === 'localhost') {
-  tasklistHostName = '127.0.0.1'
-}
-export const camundaHost = proto + tasklistHostName + ':8080/camunda/app/tasklist'
-export const camundaRestApi = proto + hostname + ':8080/engine-rest/'
-
 export const post = (url, line) => {
   return new Promise((resolve, reject) => {
     var xhr = new XMLHttpRequest()

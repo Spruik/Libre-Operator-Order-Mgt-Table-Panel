@@ -11,7 +11,7 @@ export const getProductById = (id, success) => {
       utils.alert(
         'error',
         'Connection Error',
-        `Camunda QA Check Process failed to start due to ${e} but you can still start it manually`
+        `Failed to get product detail due to ${e} but you can still start it manually`
       )
     })
 }

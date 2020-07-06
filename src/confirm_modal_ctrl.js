@@ -17,7 +17,7 @@ export class ConfirmCtrl {
     this.tableCtrl = data.tableCtrl
     this.current.toState = data.toState
     this.conflict.toState = data.conflictToState
-    this.sendCamunda = data.sendCamundaQACheck
+    this.send = data.sendQACheck
   }
 
   prepare () {
@@ -41,7 +41,7 @@ export class ConfirmCtrl {
       this.closeForm()
       this.tableCtrl.refresh()
       if (this.current.toState === cons.STATE_START) {
-        this.sendCamunda(this.current)
+        this.send(this.current)
       }
     } else {
       utils.alert(
