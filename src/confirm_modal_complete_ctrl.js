@@ -1,5 +1,4 @@
 import * as utils from './utils'
-import * as postgres from './postgres'
 export class CompleteConfirmCtrl {
   /** @ngInject */
   constructor ({ data, tableCtrl, url, line, showAlerts }) {
