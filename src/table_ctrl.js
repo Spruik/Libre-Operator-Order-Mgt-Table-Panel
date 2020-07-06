@@ -84,8 +84,14 @@ export class TableCtrl extends MetricsPanelCtrl {
       const orderIdIndex = $scope.ctrl.colDimensions.indexOf('order_id')
       const prodDescIndex = $scope.ctrl.colDimensions.indexOf('product_desc')
       const prodIdIndex = $scope.ctrl.colDimensions.indexOf('product_id')
-      if (!~prodLineIndex || !~orderIdIndex || !~prodDescIndex || !~prodIdIndex) {
-        utils.alert('error', 'Error', 'Get not get this order from the database, please contact the dev team')
+      if (!~prodLineIndex) {
+        utils.alert('error', 'Error', 'Expected column production_line missing or hidden')
+      } else if (!~orderIdIndex) {
+        utils.alert('error', 'Error', 'Expected column order_id missing or hidden')
+      } else if (!~prodDescIndex) {
+        utils.alert('error', 'Error', 'Expected column product_desc missing or hidden')
+      } else if (!~prodIdIndex) {
+        utils.alert('error', 'Error', 'Expected column product_id missing or hidden')
       } else {
         showActionForm(
           rowData[prodLineIndex],
