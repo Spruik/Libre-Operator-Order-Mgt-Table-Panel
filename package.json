@@ -1,19 +1,20 @@
 {
-  "name": "smart-factory-operator-order-mgt-table-panel",
+  "name": "libre-operator-order-mgt-table-panel",
   "version": "1.0.0",
-  "description": "A table for the operator to manage orders",
+  "description": "A Libre panel to run and complete orders for manufacture",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Spruik/smart-factory-operator-order-mgt-table-panel"
+    "url": "https://github.com/Spruik/Libre-Operator-Order-Mgt-Table-Panel"
   },
   "author": "Spruik Technologies",
   "bugs": {
-    "url": "https://github.com/Spruik/smart-factory-operator-order-mgt-table-panel/issues"
+    "url": "https://github.com/Spruik/Libre-Operator-Order-Mgt-Table-Panel/issues"
   },
   "main": "src/module.js",
   "scripts": {
-    "lint": "eslint --color .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "standard src/*.js Gruntfile.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "grunt build"
   },
   "keywords": [
     "table",
@@ -33,7 +34,8 @@
     "grunt": "~0.4.5",
     "grunt-babel": "~6.0.0",
     "grunt-contrib-clean": "~0.6.0",
-    "grunt-contrib-concat": "latest",
+    "grunt-contrib-compress": "^1.6.0",
+    "grunt-contrib-concat": "^1.0.1",
     "grunt-contrib-copy": "~0.8.2",
     "grunt-contrib-jshint": "^1.0.0",
     "grunt-contrib-uglify": "~0.11.0",
@@ -41,15 +43,13 @@
     "grunt-execute": "~0.2.2",
     "grunt-force-task": "^2.0.0",
     "grunt-multi-dest": "^1.0.0",
+    "grunt-string-replace": "^1.3.1",
     "grunt-systemjs-builder": "^0.2.5",
-    "load-grunt-tasks": "~3.2.0"
+    "load-grunt-tasks": "~3.2.0",
+    "standard": "^14.3.4"
   },
   "dependencies": {
-    "algoliasearch": "^3.32.0",
-    "echarts": "^4.2.0-rc.2",
-    "instantsearch.js": "^3.0.0",
     "lodash": "^4.17.2",
-    "moment": "^2.12.0",
-    "pg": "^7.8.0"
+    "moment": "^2.12.0"
   }
 }
