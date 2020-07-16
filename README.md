@@ -1,6 +1,6 @@
 ## Libre Operator Order Management Table Panel
 
-| A Libre panel to execute, pause and complete orders for manufacture
+> A Libre panel to execute, pause and complete orders for manufacture
 
 This panel gives a operator the ability to execute, pause and complete manufacturing orders for a production line and product. This panel is part of [Libre](https://github.com/Spruik/Libre). This plugin interfaces to a no security json rest api for equipment, orders and products running on the same grafana server. This panel is targeted at Grafana v6.x.x. only.
 
@@ -92,7 +92,7 @@ Start by cloning this repository
 ```shell
 ~/
 $ git clone https://github.com/Spruik/Libre-Operator-Order-Mgt-Table-Panel
-Cloning into 'libre-operator-order-mgt-table-panel'...
+Cloning into 'Libre-Operator-Order-Mgt-Table-Panel'...
 remote: Enumerating objects: 46, done.
 remote: Counting objects: 100% (46/46), done.
 remote: Compressing objects: 100% (31/31), done.
@@ -103,8 +103,8 @@ Unpacking objects: 100% (46/46), done.
 Enter project and install dependencies
 
 ```shell
-$ cd ./libre-operator-order-mgt-table-panel
-~/libre-operator-order-mgt-table-panel
+$ cd ./Libre-Operator-Order-Mgt-Table-Panel
+~/Libre-Operator-Order-Mgt-Table-Panel
 $ npm install
 ...
 added 714 packages from 399 contributors and audited 719 packages in 11.871s
@@ -124,17 +124,23 @@ updated 1 package in 1.364s
 Run grunt to build the panel
 
 ```shell
+~/Libre-Operator-Order-Mgt-Table-Panel
 $ grunt
-
 Running "copy:src_to_dist" (copy) task
-Created 2 directories, copied 8 files
+Created 3 directories, copied 8 files
 
 Running "copy:libs" (copy) task
+Copied 1 file
+
+Running "copy:readme" (copy) task
+Created 1 directory, copied 7 files
+
+Running "string-replace:dist" (string-replace) task
+
+1 files created
 
 Running "copy:pluginDef" (copy) task
 Copied 1 file
-
-Running "copy:image_to_dist" (copy) task
 
 Running "babel:dist" (babel) task
 
@@ -145,18 +151,21 @@ Done, without errors.
 Start docker-compose.dev.yml detached
 
 ```shell
-~/libre-operator-order-mgt-table-panel
-$ docker-compose -f docker-compose.dev.yml up -d
-Starting libre-operator-order-mgt-table-panel_postgres_1
-Starting libre-operator-order-mgt-table-panel_postrest_1
-Starting libre-operator-order-mgt-table-panel_simulator_1
-Starting libre-operator-order-mgt-table-panel_grafana_1
+~/Libre-Operator-Order-Mgt-Table-Panel
+$ docker-compose -f docker-compose.dev.yaml up -d
+Creating network "libre-operator-order-mgt-table-panel_default" with the default driver
+Creating libre-operator-order-mgt-table-panel_postgres_1 ... done
+Creating libre-operator-order-mgt-table-panel_influx_1   ... done
+Creating libre-operator-order-mgt-table-panel_postrest_1 ... done
+Creating libre-operator-order-mgt-table-panel_grafana_1   ... done
+Creating libre-operator-order-mgt-table-panel_simulator_1 ... done
+
 ```
 
 Run grunt watch to recompile on change
 
 ```shell
-~/libre-operator-order-mgt-table-panel
+~/Libre-Operator-Order-Mgt-Table-Panel
 $ grunt watch
 Running "watch" task
 Waiting...
@@ -174,7 +183,7 @@ Prerequisites
 Build panel and zip into archive
 
 ```shell
-~/libre-operator-order-mgt-table-panel
+~/Libre-Operator-Order-Mgt-Table-Panel
 $ grunt build
 Running "clean:0" (clean) task
 >> 1 path cleaned.
@@ -183,13 +192,13 @@ Running "clean:1" (clean) task
 >> 1 path cleaned.
 
 Running "copy:src_to_dist" (copy) task
-Created 3 directories, copied 9 files
+Created 3 directories, copied 8 files
 
 Running "copy:libs" (copy) task
-
+Copied 1 file
 
 Running "copy:readme" (copy) task
-Created 1 directory, copied 8 files
+Created 1 directory, copied 7 files
 
 Running "string-replace:dist" (string-replace) task
 
@@ -201,9 +210,10 @@ Copied 1 file
 Running "babel:dist" (babel) task
 
 Running "compress:main" (compress) task
->> Compressed 44 files.
+>> Compressed 46 files.
 
 Done, without errors.
+
 ```
 
 Find a completed build of this panel in the root directory named `libre-operator-order-mgt-table-panel.zip`.
