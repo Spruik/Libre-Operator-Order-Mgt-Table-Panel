@@ -1,6 +1,6 @@
 {
   "name": "libre-operator-order-mgt-table-panel",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A Libre panel to run and complete orders for manufacture",
   "repository": {
     "type": "git",
