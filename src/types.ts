@@ -2,6 +2,9 @@ export interface LibreOperatorOrderMgtTableOptions {
   broker: string;
   port: number;
   clientId: string;
+  noOrder: string;
+  basePath: string;
+  secure: boolean;
 }
 
 export interface Order {

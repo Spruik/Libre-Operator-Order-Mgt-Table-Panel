@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import { PanelProps } from '@grafana/data';
+import { PanelProps, ArrayVector } from '@grafana/data';
 import { LibreOperatorOrderMgtTableOptions, Order } from 'types';
 import { css, cx } from 'emotion';
-import { Alert, stylesFactory, Modal, Button, HorizontalGroup, IconButton, Icon } from '@grafana/ui';
+import { Alert, stylesFactory, Modal, Button, HorizontalGroup, Icon } from '@grafana/ui';
 import * as mqtt from 'mqtt';
 
 interface Props extends PanelProps<LibreOperatorOrderMgtTableOptions> {}
@@ -52,6 +52,10 @@ export class LibreOperatorOrderMgtTablePanel extends Component<Props, State> {
   });
 
   statusColours = (status: string) => {
+    if (status === undefined || status === null) {
+      return '#FFFFFFFF'
+    }
+
     switch (status.toLowerCase()) {
       case 'planned':
         return '#C9C9C9';
@@ -81,28 +85,32 @@ export class LibreOperatorOrderMgtTablePanel extends Component<Props, State> {
 
   startOrder = () => {
     const options: mqtt.IClientOptions = {
-      clientId: this.props.options.clientId,
-      port: this.props.options.port,
-      keepalive: 30,
+      port: 8084,
+      host: 'test.libremfg.ai',
+      hostname: 'test.libremfg.ai',
+      path: '/mqtt',
+      clientId: 'some-client',
       protocolId: 'MQTT',
-      protocolVersion: 4,
       clean: true,
-      reconnectPeriod: 1000,
+      reconnectPeriod: 0,
       connectTimeout: 30 * 1000,
+      resubscribe: false,
+      rejectUnauthorized: false,
       will: {
         topic: 'WillMsg',
         payload: 'Connection Closed abnormally..!',
         qos: 0,
         retain: false
       },
-      rejectUnauthorized: false
     };
-    let client: mqtt.MqttClient = mqtt.connect(`tcp://${this.props.options.broker}:${this.props.options.port}`, options)
+    //const brokerUrl = `${this.props.options.secure ? 'wss' : 'tcp'}://${this.props.options.broker}:${this.props.options.port}${this.props.options.basePath}`
+    const brokerUrl = 'wss://test.libremfg.ai:8084/mqtt'
+    let client: mqtt.MqttClient = mqtt.connect(brokerUrl, options)
     
-    client.on('connect', (cb) => {
+    client.on('connect', (packet: mqtt.Packet) => {
       console.log("MQTT Client Connected")
       client.publish(
-        `${(this.state.selectedOrder || {line: 'Unknown'}).line}\\Order`,
+        `${(this.state.selectedOrder || {line: 'Unknown'}).line}/Order`,
         `${(this.state.selectedOrder || {order: ''}).order}`,
         {qos: 1, retain: true})
       console.log("MQTT Client Msg Published")
@@ -126,8 +134,11 @@ export class LibreOperatorOrderMgtTablePanel extends Component<Props, State> {
   stopOrder = () => {
     const options: mqtt.IClientOptions = {
       clientId: this.props.options.clientId,
+      host: this.props.options.broker,
+      path: this.props.options.basePath,
       port: this.props.options.port,
       keepalive: 30,
+      protocol: this.props.options.secure ? 'wss' : 'mqtt',
       protocolId: 'MQTT',
       protocolVersion: 4,
       clean: true,
@@ -141,13 +152,13 @@ export class LibreOperatorOrderMgtTablePanel extends Component<Props, State> {
       },
       rejectUnauthorized: false
     };
-    let client: mqtt.MqttClient = mqtt.connect(`tcp://${this.props.options.broker}:${this.props.options.port}`, options)
+    let client: mqtt.MqttClient = mqtt.connect(`${this.props.options.secure ? 'wss' : 'ws'}://${this.props.options.broker}:${this.props.options.port}${this.props.options.basePath}`, options)
     
     client.on('connect', (cb) => {
       console.log("MQTT Client Connected")
       client.publish(
-        `${(this.state.selectedOrder || {line: 'Unknown'}).line}\\Order`,
-        ``,
+        `${(this.state.selectedOrder || {line: 'Unknown'}).line}/Order`,
+        `${this.props.options.noOrder || ''}`,
         {qos: 1, retain: true})
       console.log("MQTT Client Msg Published")
       client.end()
@@ -191,16 +202,38 @@ export class LibreOperatorOrderMgtTablePanel extends Component<Props, State> {
     let orders: Order[] = [];
     if (data.series.length == 1) {
 
-      let lineFields = data.series[0].fields.filter((f)=>{return f.name === 'line'})[0].values
-      let orderFields = data.series[0].fields.filter((f)=>{return f.name === 'order'})[0].values
-      let productFields = data.series[0].fields.filter((f)=>{return f.name === 'product'})[0].values
-      let scheduledStartTimeFields = data.series[0].fields.filter((f)=>{return f.name === 'scheduledstarttime'})[0].values
-      let statusFields = data.series[0].fields.filter((f)=>{return f.name === 'status'})[0].values
-      let scheduleQuantityFields = data.series[0].fields.filter((f)=>{return f.name === 'scheduledquantity'})[0].values
-      let actualQuantityFields = data.series[0].fields.filter((f)=>{return f.name === 'actualquantity'})[0].values
-      let rateFields = data.series[0].fields.filter((f)=>{return f.name === 'rate'})[0].values
-      let actualStartTimeFields = data.series[0].fields.filter((f)=>{return f.name === 'actualstarttime'})[0].values
-      let productDescriptionFields = data.series[0].fields.filter((f)=>{return f.name === 'productdescription'})[0].values
+      let lineFields = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'line' || f.config.displayName?.toLowerCase() === 'line'}
+      )[0].values
+      let orderFields = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'order' || f.config.displayName?.toLowerCase() === 'order'}
+      )[0].values
+      let productFields = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'product' || f.config.displayName?.toLowerCase() === 'product'}
+      )[0].values
+      let scheduledStartTimeFields = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'scheduledstarttime' || f.config.displayName?.toLowerCase() === 'scheduledstarttime'}
+      )[0].values
+      let statusFields = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'status' || f.config.displayName?.toLowerCase() === 'status'}
+      )[0].values
+      let scheduleQuantityFields = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'scheduledquantity' || f.config.displayName?.toLowerCase() === 'scheduledquantity'}
+      )[0].values
+      const actualQuantityFieldsArray = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'actualquantity' || f.config.displayName?.toLowerCase() === 'actualquantity'}
+      )
+      let actualQuantityFields = actualQuantityFieldsArray.length > 0 ? actualQuantityFieldsArray[0].values : new ArrayVector()
+      let rateFields = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'rate' || f.config.displayName?.toLowerCase() === 'rate'}
+      )[0].values
+      const actualStartTimeFieldArray = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'actualstarttime' || f.config.displayName?.toLowerCase() === 'actualstarttime'}
+      )
+      let actualStartTimeFields = actualStartTimeFieldArray.length > 0 ? actualStartTimeFieldArray[0].values : new ArrayVector()
+      let productDescriptionFields = data.series[0].fields.filter(
+        (f)=>{return f.name.toLowerCase() === 'productdescription' || f.config.displayName?.toLowerCase() === 'productdescription'}
+      )[0].values
 
 
       for (let i = 0; i < data.series[0].fields[0].values.length; i++){
@@ -272,8 +305,8 @@ export class LibreOperatorOrderMgtTablePanel extends Component<Props, State> {
               onDismiss={this.dismissOrder}>
                 <p>Use the buttons to start/and stop the order.</p>
                 <HorizontalGroup spacing="lg">
-                  <Button icon="play" onClick={this.startOrder} disabled={['created', 'planned', 'ready'].indexOf(selectedOrder.status.toLocaleLowerCase()) < 0}>Start</Button>
-                  <Button icon="square-shape" onClick={this.stopOrder} disabled={['running'].indexOf(selectedOrder.status.toLocaleLowerCase()) < 0}>Stop</Button>
+                  <Button icon="play" onClick={this.startOrder} disabled={selectedOrder.status != undefined && ['created', 'planned', 'ready'].indexOf(selectedOrder.status.toLocaleLowerCase()) < 0}>Start</Button>
+                  <Button icon="square-shape" onClick={this.stopOrder} disabled={selectedOrder.status != undefined && ['running'].indexOf(selectedOrder.status.toLocaleLowerCase()) < 0}>Stop</Button>
                 </HorizontalGroup>
               </Modal>
             : <></> }
@@ -286,7 +319,7 @@ export class LibreOperatorOrderMgtTablePanel extends Component<Props, State> {
                     className={cx(
                       styles.wrapper,
                       css`
-                        background-color: ${this.statusColours(order.status)}; color: #000000;
+                        ${order.status ? 'background-color: ' + this.statusColours(order.status) + ' color: #000000': ''};
                       `
                     )}
                   >

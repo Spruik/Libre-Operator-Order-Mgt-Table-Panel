@@ -17,10 +17,28 @@ export const plugin = new PanelPlugin<LibreOperatorOrderMgtTableOptions>(LibreOp
       defaultValue: 1883
     })
     .addTextInput({
+      path: 'basePath',
+      name: 'Basepath',
+      description: 'The url path to connect on',
+      defaultValue: '/mqtt'
+    })
+    .addBooleanSwitch({
+      path: 'secure',
+      name: 'Secure',
+      description: 'Connective over secure websocket',
+      defaultValue: true
+    })
+    .addTextInput({
       path: 'clientId',
       name: 'Client Id',
       description: 'Name of the client id to connect with',
       defaultValue: `mqttjs_${Math.random().toString(16).substr(2, 8)}`,
+    })
+    .addTextInput({
+      path: 'noOrder',
+      name: 'No Order Value',
+      description: 'Value to send when no order',
+      defaultValue: `No Order`,
     })
     // .addBooleanSwitch({
     //   path: 'showSeriesCount',
