@@ -2,7 +2,9 @@ import { PanelPlugin } from '@grafana/data';
 import { LibreOperatorOrderMgtTableOptions } from './types';
 import { LibreOperatorOrderMgtTablePanel } from './LibreOperatorOrderMgtTablePanel';
 
-export const plugin = new PanelPlugin<LibreOperatorOrderMgtTableOptions>(LibreOperatorOrderMgtTablePanel).setPanelOptions(builder => {
+export const plugin = new PanelPlugin<LibreOperatorOrderMgtTableOptions>(LibreOperatorOrderMgtTablePanel)
+  .setNoPadding()
+  .setPanelOptions(builder => {
   return builder
     .addTextInput({
       path: 'broker',
