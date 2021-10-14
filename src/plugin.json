@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "type": "panel",
   "name": "libre-operator-order-mgt-table-panel",
-  "id": "libre-libre-operator-order-mgt-table-panel",
+  "id": "libre-operator-order-mgt-table-panel",
   "info": {
     "description": "A Libre panel to execute, pause and complete orders for manufacture",
     "author": {
