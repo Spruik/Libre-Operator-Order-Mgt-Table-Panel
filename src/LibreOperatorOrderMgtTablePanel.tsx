@@ -1,32 +1,128 @@
 import React, { useState } from 'react';
-import { GrafanaTheme, PanelProps } from '@grafana/data';
+import { AppEvents, DataFrame, GrafanaTheme, PanelData, PanelProps } from '@grafana/data';
 import { Button, getScrollbarWidth, HorizontalGroup, Modal, styleMixins, stylesFactory, useTheme } from '@grafana/ui';
-import { SystemJS } from '@grafana/runtime';
+import { getDataSourceSrv, SystemJS } from '@grafana/runtime';
 import { css } from 'emotion';
 
 import { LibreOperatorOrderMgtTableOptions, Order } from 'types';
 
-//const { alertError, alertSuccess } = AppEvents;
+
+const { alertError, alertSuccess } = AppEvents;
 
 interface Props extends PanelProps<LibreOperatorOrderMgtTableOptions> {}
 
-const COLUMNS: string[] = [
-  'Line',
-  'Order',
-  'Prod. Id',
-  'Date',
-  'Status',
-  'QTY',
-  'Complete',
-  'Rate',
-  'Start Time',
-  'Prod. Description',
-];
+const COLUMNS: string[] = ["Segment Name", "Product Name", "Dispatch State", "Expected Duration", "Duration Units", "Scheduled Start Time","Actual Start Time", "Actual Duration"]
+
+
+const transform = (data: PanelData) => {
+    return transformJobRequests(data)
+}
+
+const getColumnNames = (data: PanelData) =>{
+  const fields = data.series[0].fields;
+  return fields.map(field => field.name)
+}
+
+const transformJobRequests = (dataPanel: PanelData) =>{
+    const dataFields = getColumnNames(dataPanel);
+    const dataFrame = dataPanel.series[0]
+
+    if (!dataFrame) {
+      return [];
+    }
+    let jobOrders = []
+
+    
+    let dataFieldValues = {};
+
+    for (let fieldName of dataFields){
+      
+      //@ts-ignore
+      dataFieldValues[fieldName] =  dataFrame.fields.find(field => {return field.name === fieldName})
+    }
+
+    for (let i = 0; i < dataFrame.length; i++){
+      let jobOrder = {};
+      for (let fieldName of dataFields){
+        //@ts-ignore
+        jobOrder[fieldName] = dataFieldValues[fieldName]?.values.get(i);
+      }
+      jobOrders.push(jobOrder);
+    }
+
+    return {fields: dataFields,requests: jobOrders};
+
+  }
+
+  const refreshDashboard = () => {
+    //
+    // TODO: This is such a hack and needs to be replaced with something better
+    // Source: https://community.grafana.com/t/refresh-the-dashboard-from-the-react-panel-plugin/31255/7
+    //
+    const refreshPicker = document.getElementsByClassName('refresh-picker');
+    if (refreshPicker.length > 0) {
+      const buttons = refreshPicker[0].getElementsByClassName('toolbar-button');
+      if (buttons.length > 0) {
+        const button = buttons[0];
+        // @ts-ignore
+        button.click();
+      }
+    }
+  };
+    
 
 export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data, width, height }) => {
   const theme = useTheme();
   const styles = getStyles(theme);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+
+  console.log(options, data.request?.targets)
+  
+  const executeMutation = (request: string) => {
+    const eventsRequest = data.request?.targets.find(target => {
+      return target.refId === options.eventMetric;
+    });
+
+    if (eventsRequest) {
+      getDataSourceSrv()
+        .get(eventsRequest.datasource)
+        .then(ds => {
+          try {
+            //@ts-ignore
+            ds.request(request).then((payload: ResponseWithData) => {
+              if (payload?.status === 200) {
+                if (payload.data.errors !== undefined) {
+                  //@ts-ignore
+                  dashboardAlert(alertError, `EVENT UPDATE FAILED: ${payload.data.errors[0].message}`);
+                } else {
+                  dashboardAlert(alertSuccess, `Event Successfully Updated`);
+                  refreshDashboard();
+                  dismissOrder();
+                }
+              }
+            });
+          } catch (error) {
+            dashboardAlert(alertError, `Failed to Update: ${error}`);
+          }
+        })
+        .catch((err: Error) => {
+          dashboardAlert(alertError, `Failed to find Event Metric '${options.eventMetric}': ${err}`);
+        });
+    } else {
+      dashboardAlert(alertError, `Failed to find Event Metric '${options.eventMetric}'`);
+    }
+  };
+
+  const updateJobStatus = (jobName: string, status: string) =>{
+
+    const query = `mutation{
+      updateJobOrderStatus(input:{filter:{name:{eq:"${jobName}"}},set:{dispatchStatus:${status}}}){
+        id
+      }
+    }`
+
+    executeMutation(query);
+  }
 
   //@ts-ignore
   const dashboardAlert = (type: any, msg: string) => {
@@ -35,14 +131,14 @@ export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data
     });
   };
 
-  console.log(data);
+  
 
   const startOrder = (e: any) => {
-    console.log(e);
+    updateJobStatus(selectedOrder.name, "ACTIVE" )
   };
 
   const stopOrder = (e: any) => {
-    console.log(e);
+    
   };
 
   const onOrderClick = (event: any, order: Order) => {
@@ -53,14 +149,17 @@ export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data
     setSelectedOrder(null);
   };
 
-  const orders: Order[] = [];
+  //@ts-ignore
+  const orders = transform(data).requests;
+  //@ts-ignore
+  const columns = transform(data).fields;
 
   return (
     <div role="table" className={styles.wrapper}>
       <table width={width}>
         <thead className={styles.thead}>
           <tr>
-            {COLUMNS.map(column => {
+            {columns.map(column => {
               return (
                 <th className={styles.headerCell}>
                   <div className={styles.headerCellLabel}>{column}</div>
@@ -107,25 +206,13 @@ export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data
           {orders &&
             orders.map(order => {
               return (
-                <>
-                  <tr
-                    className={styles.row(order.status)}
-                    onClick={e => {
-                      onOrderClick(e, order);
-                    }}
-                  >
-                    <td className={styles.cellContainer(order.status)}>{order.line}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.order}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.product}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.scheduleStartTime}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.status}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.scheduleQuantity}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.actualQuantity}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.rate}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.actualStartTime}</td>
-                    <td className={styles.cellContainer(order.status)}>{order.productDescription}</td>
-                  </tr>
-                </>
+                <tr className={styles.row(theme, options, order.dispatchStatus)} onClick={(e) => {onOrderClick(e, order)}}>
+                  {
+                    columns.map(column => {
+                      return <td className={styles.cellContainer(theme, options, order.dispatchStatus)}> {order[column]} </td>
+                    })
+                  }
+                </tr>
               );
             })}
         </tbody>
@@ -134,24 +221,24 @@ export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data
   );
 };
 
-const getStatusColor = (status: string | undefined, theme?: string) => {
+const getStatusColor = (theme: any, options: any, status: string | undefined) => {
   if (status === undefined || status === null) {
     return '#FFFFFFFF';
   }
 
   switch (status.toLowerCase()) {
     case 'planned':
-      return theme === 'light' ? '#C9C9C9' : '#636363';
+      return theme.visualization.getColorByName(options.active);
     case 'next':
-      return theme === 'light' ? '#FFFB85' : '#636112';
+      return theme.visualization.getColorByName(options.parked);
     case 'running':
-      return theme === 'light' ? '#91F449' : '#3B631E';
+      return theme.visualization.getColorByName(options.parked);
     case 'paused':
-      return theme === 'light' ? '#E8B20C' : '#634C05';
+      return theme.visualization.getColorByName(options.parked);
     case 'complete':
-      return theme === 'light' ? '#70C6FF' : '#2C4D63';
-    case 'closed':
-      return theme === 'light' ? '#FF7773' : '#632F2D';
+      return theme.visualization.getColorByName(options.parked);
+    case 'pending':
+      return theme.visualization.getColorByName(options.pending);
     case 'ready':
     default:
       return theme === 'light' ? '#CCFFAF' : '#506345';
@@ -169,8 +256,8 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
   const lastChildExtraPadding = Math.max(getScrollbarWidth(), cellPadding);
   const themeName = theme.type;
 
-  const buildCellContainerStyle = (status?: string) => {
-    const background = getStatusColor(status, themeName);
+  const buildCellContainerStyle = (theme,options, status?: string) => {
+    const background = getStatusColor(theme,options,status);
     return css`
       padding: ${cellPadding}px;
 
@@ -195,8 +282,8 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
     `;
   };
 
-  const buildRowStyle = (status?: string) => {
-    const statusColour = getStatusColor(status, themeName);
+  const buildRowStyle = (theme, options, status?: string) => {
+    const statusColour = getStatusColor(theme, options, status);
 
     const rowHoverBg = styleMixins.hoverColor(statusColour || theme.colors.bg1, theme);
     return css`
@@ -218,8 +305,8 @@ const getStyles = stylesFactory((theme: GrafanaTheme) => {
     thead: css`
       label: thead;
       height: ${cellHeight}px;
-      overflow-y: auto;
-      overflow-x: hidden;
+      overflow-y: scroll;
+      overflow-x: scroll;
       background: ${headerBg};
       position: relative;
     `,

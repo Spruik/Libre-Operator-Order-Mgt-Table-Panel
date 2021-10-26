@@ -7,43 +7,59 @@ export const plugin = new PanelPlugin<LibreOperatorOrderMgtTableOptions>(LibreOp
   .setPanelOptions(builder => {
     return builder
       .addTextInput({
-        path: 'broker',
-        name: 'MQTT Broker',
-        description: 'Address of the MQTT Broker to write Order Changes to',
-        defaultValue: 'localhost',
+        path: 'eventMetric',
+        name: 'Event Metric',
+        description: 'Name of Query Metric with Event Data',
+        defaultValue: 'Events',
       })
-      .addNumberInput({
-        path: 'port',
-        name: 'Port',
-        description: 'MQTT Broker Connection Port',
-        defaultValue: 1883,
+     .addTextInput({
+        path: 'jobRequestID',
+        name: 'Job Request ID Path',
+        description: 'The path of job request ID with respect to Data Path',
+        defaultValue: 'id',
+      }).addTextInput({
+        path: 'dispatchStatusPath',
+        name: 'Path of Dispatch Status',
+        description: 'The path of dispatch status with respect to Data Path',
+        defaultValue: 'id',
       })
-      .addTextInput({
-        path: 'basePath',
-        name: 'Basepath',
-        description: 'The url path to connect on',
-        defaultValue: '/mqtt',
+      .addColorPicker({
+        path: 'active',
+        name: 'ACTIVE Status Color',
+        defaultValue: 'red',
+        settings: {
+          options: [
+            {
+              value: 'red',
+              label: 'Red',
+            }
+          ],
+        }
+      }).addColorPicker({
+        path: 'pending',
+        name: 'PENDING Status Color',
+        defaultValue: 'orange',
+        settings: {
+          options: [
+            {
+              value: 'orange',
+              label: 'Orange',
+            }
+          ],
+        }
+      }).addColorPicker({
+        path: 'PARKED',
+        name: 'PARKED Status Color',
+        defaultValue: 'blue',
+        settings: {
+          options: [
+            {
+              value: 'blue',
+              label: 'Blue',
+            }
+          ],
+        }
       })
-      .addBooleanSwitch({
-        path: 'secure',
-        name: 'Secure',
-        description: 'Connective over secure websocket',
-        defaultValue: true,
-      })
-      .addTextInput({
-        path: 'clientId',
-        name: 'Client Id',
-        description: 'Name of the client id to connect with',
-        defaultValue: `mqttjs_${Math.random()
-          .toString(16)
-          .substr(2, 8)}`,
-      })
-      .addTextInput({
-        path: 'noOrder',
-        name: 'No Order Value',
-        description: 'Value to send when no order',
-        defaultValue: `No Order`,
-      });
     // .addBooleanSwitch({
     //   path: 'showSeriesCount',
     //   name: 'Show series counter',
