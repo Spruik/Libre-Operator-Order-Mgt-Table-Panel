@@ -11,9 +11,6 @@ const { alertError, alertSuccess } = AppEvents;
 
 interface Props extends PanelProps<LibreOperatorOrderMgtTableOptions> {}
 
-const COLUMNS: string[] = ["Segment Name", "Product Name", "Dispatch State", "Expected Duration", "Duration Units", "Scheduled Start Time","Actual Start Time", "Actual Duration"]
-
-
 const transform = (data: PanelData) => {
     return transformJobRequests(data)
 }
@@ -21,6 +18,10 @@ const transform = (data: PanelData) => {
 const getColumnNames = (data: PanelData) =>{
   const fields = data.series[0].fields;
   return fields.map(field => field.name)
+}
+
+const transformDispatch = (dataPanel: PanelData) =>{
+  console.log(dataPanel.series);
 }
 
 const transformJobRequests = (dataPanel: PanelData) =>{
@@ -74,11 +75,12 @@ const transformJobRequests = (dataPanel: PanelData) =>{
 export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data, width, height }) => {
   const theme = useTheme();
   const styles = getStyles(theme);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-
-  console.log(options, data.request?.targets)
-  
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+ 
   const executeMutation = (request: string) => {
+
+    console.log(request)
+
     const eventsRequest = data.request?.targets.find(target => {
       return target.refId === options.eventMetric;
     });
@@ -117,7 +119,9 @@ export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data
 
     const query = `mutation{
       updateJobOrderStatus(input:{filter:{name:{eq:"${jobName}"}},set:{dispatchStatus:${status}}}){
-        id
+        equipment{
+          id
+        }
       }
     }`
 
@@ -134,6 +138,7 @@ export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data
   
 
   const startOrder = (e: any) => {
+    console.log(selectedOrder)
     updateJobStatus(selectedOrder.name, "ACTIVE" )
   };
 
@@ -153,6 +158,8 @@ export const LibreOperatorOrderMgtTablePanel: React.FC<Props> = ({ options, data
   const orders = transform(data).requests;
   //@ts-ignore
   const columns = transform(data).fields;
+
+  const transitions = transformDispatch(data);
 
   return (
     <div role="table" className={styles.wrapper}>
@@ -227,7 +234,7 @@ const getStatusColor = (theme: any, options: any, status: string | undefined) =>
   }
 
   switch (status.toLowerCase()) {
-    case 'planned':
+    case 'active':
       return theme.visualization.getColorByName(options.active);
     case 'next':
       return theme.visualization.getColorByName(options.parked);
